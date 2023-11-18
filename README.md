@@ -48,7 +48,7 @@ https://github.com/blinskey/middle-liddell
 These files were made available by the Tufts University Perseus Digital Library
 
 ### dictionary_MLJohnson.py
-This module is called when the language is set to Old English. It uses a text file extracted from https://old-engli.sh/dictionary.php containing Mary Lynch Johnson's A Modern English - Old English Dictionary.
+This module is called when the language is set to Old English. It uses a text file containing Mary Lynch Johnson's A Modern English - Old English Dictionary.
 I hope to make this file available soon.
 
 ### get_simple.py
