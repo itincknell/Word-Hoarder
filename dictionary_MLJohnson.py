@@ -273,110 +273,114 @@ def Johnson_OED(new_dictionary):
 	counter = 0
 	line_counter = 0
 
-	with open('MLJohnson_OEDictionary.txt','r') as f:
-		if progress_print:
-			print(f"Parsing 'MLJohnson_OEDictionary.txt': ",flush=True,end='')
-	
-		for line in f.readlines():
-			line = line.split()
-
-			if '[]' in line:
-				line.remove('[]')
-
-			offset = 0
-			for i in range(len(line)):
-				i = i - offset
-				if len(line[i]) > 2:
-					line[i] = line[i].rstrip('1234')
-				if len(line[i]) > 1:
-					line[i] = line[i].strip('?')
-				if line[i].rstrip('1234') == '':
-					del line[i]
-					offset += 1
-					i -= 1
-
-				if line[i].strip('.') in other_pos and line[i-1].strip('.') == 'interrog':
-					line[i-1] = 'interrog. adv.'
-					del line[i]
-					offset += 1
-
-			if line:
-				new_word = {}
-				new_word['heading'] = new_word['handle'] = line[0]
-
-				# PART OF SPEECH TESTS
-				entry, index = pos_test(line)
-				if debug_print:
-					print(f'\nPOS TEST: {entry} {index}')
-
-				if entry:
-					if entry['partOfSpeech'] == 'suffix' or entry['partOfSpeech'] == 'prefix':
-						for i in range(len(line)):
-							if entry['partOfSpeech'] in line[i]:
-								line[i] = line[i].strip(",.;") + ":"
-
-
-				one_entry = True
-				for n in numbers:
-					if n in line:
-						one_entry = False
-					else:
-						break
-				if debug_print:
-					print(f"ONE ENTRY = {one_entry}")
-
-				if index == None and not one_entry:
-					new_word['entries'] = return_multi_entry(line)
-						
-				elif index and not one_entry:
-					entry['defs'] = return_defs(line,index)
-					new_word['entries'] = [entry]
-
-				elif index == None and one_entry:
-					verb = False
-					for i in range(len(line)):
-						if '/' in line[i] or line[i] == 'verb':
-							index = i + 1
-							verb = True
-					if verb:
-						entry = {'partOfSpeech':'verb','etymology':''}
-						parts = ' '.join(line[:index]).strip(',.;')
-						entry['simpleParts'] = entry['principleParts'] = parts	
-
-
-					elif 'of' in line:
-						entry = {'partOfSpeech':'form','etymology':''}
-						entry['simpleParts'] = entry['principleParts'] = line[0]
-						index = 1
-					elif index == None:
-						entry = {'partOfSpeech':'','etymology':''}
-						entry['simpleParts'] = entry['principleParts'] = line[0]
-						index = 1
-						counter += 1		
-					entry['defs'] = [{'gloss':' '.join(line[index:]).strip(',.;'),'tags':[]}]
-					new_word['entries'] = [entry]	
-				else:
-					if 'defs' not in entry:
-						entry['defs'] = [{'gloss':' '.join(line[index:]).strip(',.;'),'tags':[]}]
-					new_word['entries'] = [entry]
-				new_word['tags'] = set('MLJ')
-				if debug_print:
-					print(f"\n\tFINAL WORD: {new_word}\n")
-				if counter > 2:
-					if debug_print:
-						print("COUNTER EXCEEDED")
-					break
-				definitions.append(new_word)
-			
-			line_counter += 1
+	try:
+		with open('MLJohnson_OEDictionary.txt','r') as f:
 			if progress_print:
-				printpr(line_counter)
-
-		print(f' {line_counter:,} lines parsed',flush=True)
-
-
-		new_dictionary['definitions'].extend(definitions)
-		return new_dictionary
+				print(f"Parsing 'MLJohnson_OEDictionary.txt': ",flush=True,end='')
+		
+			for line in f.readlines():
+				line = line.split()
+	
+				if '[]' in line:
+					line.remove('[]')
+	
+				offset = 0
+				for i in range(len(line)):
+					i = i - offset
+					if len(line[i]) > 2:
+						line[i] = line[i].rstrip('1234')
+					if len(line[i]) > 1:
+						line[i] = line[i].strip('?')
+					if line[i].rstrip('1234') == '':
+						del line[i]
+						offset += 1
+						i -= 1
+	
+					if line[i].strip('.') in other_pos and line[i-1].strip('.') == 'interrog':
+						line[i-1] = 'interrog. adv.'
+						del line[i]
+						offset += 1
+	
+				if line:
+					new_word = {}
+					new_word['heading'] = new_word['handle'] = line[0]
+	
+					# PART OF SPEECH TESTS
+					entry, index = pos_test(line)
+					if debug_print:
+						print(f'\nPOS TEST: {entry} {index}')
+	
+					if entry:
+						if entry['partOfSpeech'] == 'suffix' or entry['partOfSpeech'] == 'prefix':
+							for i in range(len(line)):
+								if entry['partOfSpeech'] in line[i]:
+									line[i] = line[i].strip(",.;") + ":"
+	
+	
+					one_entry = True
+					for n in numbers:
+						if n in line:
+							one_entry = False
+						else:
+							break
+					if debug_print:
+						print(f"ONE ENTRY = {one_entry}")
+	
+					if index == None and not one_entry:
+						new_word['entries'] = return_multi_entry(line)
+							
+					elif index and not one_entry:
+						entry['defs'] = return_defs(line,index)
+						new_word['entries'] = [entry]
+	
+					elif index == None and one_entry:
+						verb = False
+						for i in range(len(line)):
+							if '/' in line[i] or line[i] == 'verb':
+								index = i + 1
+								verb = True
+						if verb:
+							entry = {'partOfSpeech':'verb','etymology':''}
+							parts = ' '.join(line[:index]).strip(',.;')
+							entry['simpleParts'] = entry['principleParts'] = parts	
+	
+	
+						elif 'of' in line:
+							entry = {'partOfSpeech':'form','etymology':''}
+							entry['simpleParts'] = entry['principleParts'] = line[0]
+							index = 1
+						elif index == None:
+							entry = {'partOfSpeech':'','etymology':''}
+							entry['simpleParts'] = entry['principleParts'] = line[0]
+							index = 1
+							counter += 1		
+						entry['defs'] = [{'gloss':' '.join(line[index:]).strip(',.;'),'tags':[]}]
+						new_word['entries'] = [entry]	
+					else:
+						if 'defs' not in entry:
+							entry['defs'] = [{'gloss':' '.join(line[index:]).strip(',.;'),'tags':[]}]
+						new_word['entries'] = [entry]
+					new_word['tags'] = set('MLJ')
+					if debug_print:
+						print(f"\n\tFINAL WORD: {new_word}\n")
+					if counter > 2:
+						if debug_print:
+							print("COUNTER EXCEEDED")
+						break
+					definitions.append(new_word)
+				
+				line_counter += 1
+				if progress_print:
+					printpr(line_counter)
+	
+			print(f' {line_counter:,} lines parsed',flush=True)
+	
+	
+			new_dictionary['definitions'].extend(definitions)
+	except FileNotFoundError:
+		print("'MLJohnson_OEDictionary.txt' not found in texts directory")
+		
+	return new_dictionary
 
 
 
