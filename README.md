@@ -5,9 +5,9 @@ A program for creating a searchable local dictionary based (mainly) on dumped wi
 ### dump_parser.py
 This module processes wiktionary dump files which can be found at kaikki.org
 
-https://kaikki.org/dictionary/Latin/
-https://kaikki.org/dictionary/Ancient%20Greek/index.html
-https://kaikki.org/dictionary/Old%20English/index.html
+<ul><li>https://kaikki.org/dictionary/Latin/</li>
+<li>https://kaikki.org/dictionary/Ancient%20Greek/index.html</li>
+<li>https://kaikki.org/dictionary/Old%20English/index.html</li></ul>
 
 See https://github.com/tatuylonen/wiktextract
 
@@ -17,33 +17,33 @@ The module organizes the data into a standard data structure used in this progra
 
 ### the word definition data structure
 Definitions are made of standard python data structures
-Definitions:
+<p>Definitions:
 {
 "heading": unicode string of the word as spelled in its original alphabet,
 "handle": heading converted to asci,
 "entries":[list of entry objects, see below],
 "tags":[list of identifying tag strings],
 "roots": heading of a root/lemma if the definition is not itself a root
-}
-Entries:
+}</p>
+<p>Entries:
 {
 "partOfSpeech": string "verb", "noun" etc.,
 "principleParts": string representing principle parts,
 "simpleParts": simplified version of principle parts supported for Latin,
 "defs": [list of def objects, typically displayed as an ordered list],
 "etymology": string containing etymology information
-}
-Defs:
+}</p>
+<p>Defs:
 {
 "gloss": string containing a word sense you would find in a typical dictionary,
 "tags": tags related to a specific word sense such as "Pre-classical" or "transitive"
-}
+}</p>
 
 ### dictionary_LSJ.py and dictionary_Middle_Liddell.py
 These modules are called when the language is set to Ancient Greek. They use machine readable files of two important greek lexicon's: the Middle Liddel and Liddel-Scott-Jones (LSJ). 
 The data files can be found here:
-https://github.com/gcelano/LSJ_GreekUnicode/blob/master/grc.lsj.perseus-eng6.xml
-https://github.com/blinskey/middle-liddell
+<ul><li>https://github.com/gcelano/LSJ_GreekUnicode/blob/master/grc.lsj.perseus-eng6.xml</li>
+<li>https://github.com/blinskey/middle-liddell</li></ul>
 
 These files were made available by the Tufts University Perseus Digital Library
 
