@@ -30,10 +30,10 @@ Definitions are made of standard python data structures
 "partOfSpeech": string "verb", "noun" etc.,
 "principleParts": string representing principle parts,
 "simpleParts": simplified version of principle parts supported for Latin,
-"defs": [list of def objects, typically displayed as an ordered list],
+"senses": [list of word 'sense' objects, typically displayed as an ordered list],
 "etymology": string containing etymology information
 }</p>
-<p>Defs:
+<p>Senses:
 {
 "gloss": string containing a word sense you would find in a typical dictionary,
 "tags": tags related to a specific word sense such as "Pre-classical" or "transitive"

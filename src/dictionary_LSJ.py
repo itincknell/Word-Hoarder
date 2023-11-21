@@ -46,10 +46,10 @@ def smart_join(text):
 	return s.replace(" .",".").replace(" ,",",").replace(" :",":")
 
 
-def configure_parts(defs):
+def configure_parts(senses):
 	count = 0
 
-	for i in defs[0]['gloss']:
+	for i in senses[0]['gloss']:
 		if i == "(":
 			count += 1
 
@@ -58,35 +58,35 @@ def configure_parts(defs):
 
 		if count < 0:
 			# Error too many )s, unbalanced parens
-			print(defs[0]['gloss'])
-			print(defs[1]['gloss'])
+			print(senses[0]['gloss'])
+			print(senses[1]['gloss'])
 			break
 
 	if count != 0:
 		parens = 0
 
-		for i in range(len(defs[1]['gloss'])):
-			if defs[1]['gloss'][i] == ")":
+		for i in range(len(senses[1]['gloss'])):
+			if senses[1]['gloss'][i] == ")":
 				parens += 1
 
-			if defs[1]['gloss'][i] == "(":
+			if senses[1]['gloss'][i] == "(":
 				parens -= 1
 
 			if parens == count:
 				break
 
-		if i < len(defs[1]['gloss']) - 1:
-			defs[0]['gloss'] = smart_join([defs[0]['gloss'],defs[1]['gloss'][: i + 1]])
-			defs[1]['gloss'] = defs[1]['gloss'][i + 1 :]
+		if i < len(senses[1]['gloss']) - 1:
+			senses[0]['gloss'] = smart_join([senses[0]['gloss'],senses[1]['gloss'][: i + 1]])
+			senses[1]['gloss'] = senses[1]['gloss'][i + 1 :]
 
-			for i in range(len(defs[1]['gloss'])):
-				if defs[1]['gloss'][i].isalpha() or defs[1]['gloss'][i] == "=":
+			for i in range(len(senses[1]['gloss'])):
+				if senses[1]['gloss'][i].isalpha() or senses[1]['gloss'][i] == "=":
 					break
-			defs[1]['gloss'] = defs[1]['gloss'][i:]
+			senses[1]['gloss'] = senses[1]['gloss'][i:]
 		else:
-			defs[0]['gloss'] += ")"
+			senses[0]['gloss'] += ")"
 
-	return defs
+	return senses
 
 
 def process_entry(text):
@@ -95,7 +95,7 @@ def process_entry(text):
 				'tags':set(),
 				'entries':[]}
 
-	entry = {'defs':[],
+	entry = {'senses':[],
 			'partOfSpeech':'',
 			'principleParts':'',
 			'simpleParts':'',
@@ -108,17 +108,17 @@ def process_entry(text):
 		print("@"*5000 + f"\nheading \"{definition['heading']}\"")
 
 	while text != "":
-		text, defs = get_def(text)
+		text, senses = get_def(text)
 
-		for x in defs:
+		for x in senses:
 			if debug_print:
 				print(f"definition: {x['gloss']}")
-			entry['defs'].append(deepcopy(x))
+			entry['senses'].append(deepcopy(x))
 
-	if len(entry['defs']) > 1:
-		entry['defs'] = configure_parts(entry['defs'])
-		entry['simpleParts'] = entry["principleParts"] = entry['defs'][0]['gloss']
-		entry['defs'].pop(0)
+	if len(entry['senses']) > 1:
+		entry['senses'] = configure_parts(entry['senses'])
+		entry['simpleParts'] = entry["principleParts"] = entry['senses'][0]['gloss']
+		entry['senses'].pop(0)
 	else:
 		entry['simpleParts'] = entry["principleParts"] = definition['heading']
 
@@ -129,7 +129,7 @@ def process_entry(text):
 def get_def(text):
 	m = 0
 	gloss = []
-	defs = []
+	senses = []
 	greek = False
 	candidate_tag = ''
 	while True:
@@ -147,7 +147,7 @@ def get_def(text):
 		if "<sense" in brac:
 			gloss = smart_join(gloss).strip(",. ")
 			if gloss != "":
-				defs.append({'gloss':gloss,'tags':[]})
+				senses.append({'gloss':gloss,'tags':[]})
 			gloss = []
 
 		if pull != "":
@@ -156,10 +156,10 @@ def get_def(text):
 		if brac == "</sense>" or text == "":
 			gloss = smart_join(gloss).strip(",. ")
 			if gloss != "":
-				defs.append({'gloss':gloss,'tags':[]})
+				senses.append({'gloss':gloss,'tags':[]})
 			break
 
-	return text, defs
+	return text, senses
 
 def extract_dictionary(perseus, dictionary):
 	line_list = []
@@ -187,32 +187,35 @@ def LSJ(new_dictionary):
 	dictionary = {'file':'','definitions':[],"language":''}
 
 	for i in range(1,28):
-		with open('grc.lsj.perseus-eng' + str(i) + '.txt','r') as f:# ####
-			if progress_print:
-				print(f"Parsing '{'grc.lsj.perseus-eng' + str(i) + '.txt:' + chr(39):<28}",end='',flush=True)
-
-			
-			line_list = []
-			ignition = False
-			counter = 0
-			for line in f.readlines():
-				if "<entryFree" in line:
-					ignition = True
-
-				if ignition:
-					line_list.append(line.strip(" \n\t"))
-
-				if "</entryFree" in line and ignition:
-					line_list.append(line.strip())
-					line_list = "".join(line_list)
-					dictionary['definitions'].append(process_entry(line_list))
-					ignition = False
-					line_list = []
-				counter += 1
+		try:
+			with open('grc.lsj.perseus-eng' + str(i) + '.txt','r') as f:# ####
 				if progress_print:
-					printpr(counter)
+					print(f"Parsing '{'grc.lsj.perseus-eng' + str(i) + '.txt:' + chr(39):<28}",end='',flush=True)
 
-			print(f' {counter:,} lines parsed',flush=True)
+				
+				line_list = []
+				ignition = False
+				counter = 0
+				for line in f.readlines():
+					if "<entryFree" in line:
+						ignition = True
+
+					if ignition:
+						line_list.append(line.strip(" \n\t"))
+
+					if "</entryFree" in line and ignition:
+						line_list.append(line.strip())
+						line_list = "".join(line_list)
+						dictionary['definitions'].append(process_entry(line_list))
+						ignition = False
+						line_list = []
+					counter += 1
+					if progress_print:
+						printpr(counter)
+
+				print(f' {counter:,} lines parsed',flush=True)
+		except FileNotFoundError:
+			print(f"'{'grc.lsj.perseus-eng' + str(i) + '.txt'} not found in 'texts' directory")
 
 	new_dictionary['definitions'].extend(dictionary['definitions'])
 	return new_dictionary

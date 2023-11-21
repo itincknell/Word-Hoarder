@@ -42,13 +42,13 @@ def extract_dictionary(lewis, dictionary,debug_print=False):
 			entry['partOfSpeech'] = i['part_of_speech']
 			if not isinstance(i['main_notes'],str):
 				for item in i['main_notes']:
-					entry['defs'].append({'gloss':item,'tags':[]})
+					entry['senses'].append({'gloss':item,'tags':[]})
 				if debug_print:
 					print("\n\n\n\t\t\t" + "*"*1000 + f"\n\nLINE: {current_line_number()}") 
-					print(f"entry['defs'] = {entry['defs']}")
+					print(f"entry['senses'] = {entry['senses']}")
 					exit()
 			else:
-				entry['defs'] = [{'gloss':i['main_notes'],'tags':[]}]
+				entry['senses'] = [{'gloss':i['main_notes'],'tags':[]}]
 
 			if 'alternative_orthography' in i:
 				entry['principleParts'] = i['alternative_orthography']
@@ -97,13 +97,13 @@ def extract_dictionary(lewis, dictionary,debug_print=False):
 							for item in sense:
 								get_senses(entry,item)
 						else:
-							entry['defs'].append({'gloss':sense,'tags':[]})
+							entry['senses'].append({'gloss':sense,'tags':[]})
 					get_senses(entry,sense)
 
 					if debug_print:
 						print("\n\n\n\t\t\t" + "*"*1000 + f"\n\nLINE: {current_line_number()}")  
 						print(f"entry with senses = ")
-						for x, item in enumerate(entry['defs']):
+						for x, item in enumerate(entry['senses']):
 							print(f"{x+1} tags: {item['tags']} gloss: {item['gloss']}")
 						print(f"senses limit reached ")
 						if counter_senses > 5:
@@ -117,7 +117,7 @@ def extract_dictionary(lewis, dictionary,debug_print=False):
 					print("\n\n\n\t\t\t" + "*"*1000 + f"\n\nLINE: {current_line_number()}")  
 					print(f"['greek_word'] == {i['greek_word']}")
 					
-					entry['defs'].append({'gloss':i['greek_word'],'tags':['greek_word']})
+					entry['senses'].append({'gloss':i['greek_word'],'tags':['greek_word']})
 					print(f"entry == {entry}")
 					if counter_grk > 1:
 						print(f"Greek Word Break")
@@ -136,20 +136,20 @@ def extract_dictionary(lewis, dictionary,debug_print=False):
 				#exit()
 		if 'principleParts' not in entry:
 			
-			defs = entry['defs'][0]['gloss']
-			defs = defs.split()
+			senses = entry['senses'][0]['gloss']
+			senses = senses.split()
 			gloss = ''
 			tag = ''
 			flag = False
-			for x, q in enumerate(defs):
+			for x, q in enumerate(senses):
 				if debug_print:
 					print("\n\n\n\t\t\t" + "*"*1000 + f"\n\nLINE: {current_line_number()}") 
-					print(f"defs = {defs}")
+					print(f"senses = {senses}")
 					print(f"q = {q}")
 					print(f"q[-1] = {q[-1]}")
 				if (x and q[0].isupper()) or q[0] == '(' or q[0].isnumeric():
 					break
-				if ((q[-1] == ',' and not flag) or (x == len(defs)-1 and not flag)  or x == 0) and not (q[-1] == '.'):
+				if ((q[-1] == ',' and not flag) or (x == len(senses)-1 and not flag)  or x == 0) and not (q[-1] == '.'):
 					gloss += q.strip(":") + ' '
 				else:
 					tag += q + ' '
@@ -176,7 +176,7 @@ def extract_dictionary(lewis, dictionary,debug_print=False):
 						print(f"final {entry['principleParts']}",flush=True)
 						exit()
 					else:
-						for x in entry['defs']:
+						for x in entry['senses']:
 							if isinstance(x['gloss'],list):
 								print(f"Gloss = List {x['gloss']}",flush=True)
 								print(f"i = {i}")

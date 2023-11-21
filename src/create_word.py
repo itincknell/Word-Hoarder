@@ -49,7 +49,7 @@ def create_word(current_dict,tags):
 	new_word['entries'][0], dummy = edit_entry.edit_entry(new_word['entries'][0],new_word)
 
 	# call word options, from here return
-	load_dict.change_path('dumps sorted')
+	load_dict.change_path('dumps_sorted')
 	if current_dict['language'] == 'Latin' or current_dict['language'] == "Ancient Greek":
 		wiki_dump = parser_shell.load_big_language(new_word['heading'][0],current_dict['language'])
 	else:
@@ -149,7 +149,7 @@ def create_entry(new_word):
 							else:
 								user_input['tags'].append(new_tag)
 						# assign to entry defintions list
-						entry['defs'] = [user_input]
+						entry['senses'] = [user_input]
 
 						# append new entry to new word, return True
 						new_word['entries'].append(entry)
