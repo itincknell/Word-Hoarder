@@ -1,7 +1,7 @@
+'''
+This module is a grab bag of functions to editing an entire user dictionary
 
-
-
-
+'''
 import get_selection
 import word_methods
 
