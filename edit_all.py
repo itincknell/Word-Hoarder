@@ -1,5 +1,5 @@
 '''
-This module is a grab bag of functions to editing an entire user dictionary
+This module is a grab bag of functions for editing an entire user dictionary
 
 '''
 import get_selection
