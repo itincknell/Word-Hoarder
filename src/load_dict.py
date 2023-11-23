@@ -18,21 +18,21 @@ import copy
 from unidecode import unidecode
 
 from get_selection import get_selection
-#import parser_shell
 
-# save cwd into global var
-global CWD
-CWD = os.getcwd() #os.path.dirname(os.getcwd()) 
+
+# save PARENT_DIR into global var
+global PARENT_DIR
+# save the parent directory of the current file into a global variable
+PARENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # CHANGE PATH
 # # # # # # # # # 
 def change_path(folder=''):
-	path = os.path.join(CWD,folder)
+	path = os.path.join(PARENT_DIR,folder)
 	if not os.path.isdir(path):
 		os.mkdir(path)
 	os.chdir(path)
 # END CHANGE PATH
-
 
 
 

@@ -14,11 +14,7 @@ from load_dict import change_path, pick_language
 import edit_all
 from get_selection import get_selection
 from language_splitter import split_language
-from tables import replace_greek_ii
-
-
-
-
+from tables import replace_greek, replace_greek_ii
 
 
 progress_print = True
@@ -252,7 +248,18 @@ def parse_lines(input_file,tag_list,language,get_simple=None):
 	definitions_dict = {}
 	counter = 0
 	for line in input_file:
+
+		# sort line into Word-Hoarder definition structure
 		line = json.loads(line)
+		new_definition = handle_word(line, tag_list,language,get_simple)
+
+		# combine synomyns
+		if new_definition['heading'] in definitions_dict:
+			definitions_dict[new_definition['heading']]['entries'].extend(new_definition['entries'])
+		else:
+			definitions_dict[new_definition['heading']] = new_definition
+
+		# show progress bar
 		counter += 1
 		if progress_print or Test:
 			if counter % 1000 == 0:
@@ -261,12 +268,7 @@ def parse_lines(input_file,tag_list,language,get_simple=None):
 				print(f' {counter:,} lines parsed',flush=True)
 		if Test:
 			print_debug_info(line,counter)
-		
-		new_definition = handle_word(line, tag_list,language,get_simple)
-		if new_definition['heading'] in definitions_dict:
-			definitions_dict[new_definition['heading']]['entries'].extend(new_definition['entries'])
-		else:
-			definitions_dict[new_definition['heading']] = new_definition
+
 	input_file.close()
 
 	print(f' {counter:,} lines parsed',flush=True)
@@ -283,8 +285,8 @@ def parse_lines(input_file,tag_list,language,get_simple=None):
 	thank(dict_str,shrt_str,n,cite,cite_2)
 	return definitions
 
-
-
+# duplicate of a function found in tables.py
+'''
 def replace_greek(word):
 	alt_letters = {
 	'Ἀ':'Α',
@@ -301,6 +303,7 @@ def replace_greek(word):
 		if x in alt_letters:
 			word = word.replace(x,alt_letters[x])
 	return word
+'''
 
 def sort_dump():
 
@@ -309,9 +312,9 @@ def sort_dump():
 	test_language = 'Ancient Greek'
 	test_file = "kaikki.org-dictionary-AncientGreek.json"
 
+	# Load list of tags that are not descriptive/overly general
 	try:
 		change_path('texts')
-		# Load list of tags that are not descriptive/overly general
 		with open('ignore_tags.txt','r') as f:
 			tag_list = json.load(f)
 	except FileNotFoundError:
@@ -319,9 +322,11 @@ def sort_dump():
 		input("Enter to continue")
 		tag_list = []
 
+	# choose language option, create kaikki.org file string
 	language = pick_language()
 	file = "kaikki.org-dictionary-" + language.replace(' ','') + ".json"
 
+	# this module loads a '-trie.txt' file which can take a few seconds, should be avoided if lanugage != Latin
 	if language == "Latin":
 		from get_simple import get_simple
 		simple = get_simple
@@ -329,39 +334,38 @@ def sort_dump():
 		simple = None
 
 	sorted_file = language.replace(" ", '') + "Dump.txt"
-
-	print(f"Parsing {file}")
 	new_dictionary = {'definitions':[], 'file': sorted_file, 'language':language}
 
+	print(f"Parsing {file}")
+	
+	# attempt to parse kaikki.org json file
 	change_path('dumps_unsorted')
 	try:
 		with open(file, 'r') as input_file:
 			new_dictionary['definitions'] = parse_lines(input_file, tag_list,language,simple)
 
+		# save a list of all tags that were encountered
 		change_path('texts')
-
 		with open(language + '_new_tag_list.txt', mode='w') as f:
 			json.dump(tag_list, f)
 	except FileNotFoundError:
-		print(f"'{file} not found in 'dumps_unsorted' directory")
+		print(f"'{file}' not found in 'dumps_unsorted' directory")
 		input("Enter to continue")
 		return
 
 	# Latin fixes
-	if True:
-		if new_dictionary['language'] == 'Latin':
-			if progress_print:
-				print(f"Fixing participles...")
-			new_dictionary = edit_all.fix_participles(new_dictionary)
-			if progress_print:
-				print(f"Fixing verbs...")
-			new_dictionary = edit_all.fix_verbs(new_dictionary)
+	if new_dictionary['language'] == 'Latin':
 		if progress_print:
-			print(f"Fixing etymologies...")
-		new_dictionary = edit_all.fix_etymology(new_dictionary)
+			print(f"Fixing participles...")
+		new_dictionary = edit_all.fix_participles(new_dictionary)
+		if progress_print:
+			print(f"Fixing verbs...")
+		new_dictionary = edit_all.fix_verbs(new_dictionary)
+	if progress_print:
+		print(f"Fixing etymologies...")
+	new_dictionary = edit_all.fix_etymology(new_dictionary)
 	
 	# Greek Supplement
-
 	if new_dictionary['language'] == "Ancient Greek":
 	
 		dict_str = ["Liddell & Scott, An Intermediate Greek-English Lexicon","Liddell & Scott, A Greek-English Lexicon (LSJ)"]
@@ -376,7 +380,6 @@ def sort_dump():
 			ui_template(new_dictionary,dict_str[i],shrt_str[i],cite,cite_2,dict_f[i])
 
 	# Old English Supplement
-
 	if new_dictionary['language'] == "Old English":
 		dict_str = "Mary Lynch Johnson, A Modern English - Old English Dictionary"
 		shrt_str = "M.L. Johnson OE Dictionary"
@@ -385,9 +388,13 @@ def sort_dump():
 		from dictionary_MLJohnson import Johnson_OED
 		ui_template(new_dictionary,dict_str,shrt_str,cite,cite_2,Johnson_OED)	
 
+	# Last few sections may leave CWD == 'texts', change to 'dumps_sorted'
 	change_path('dumps_sorted')
+
+	# sort by handle string
 	new_dictionary['definitions'].sort(key=lambda item: item.get('handle').lower())
 
+	# sort definitions list into trie
 	print("Converting dictionary to trie")
 	split_language(new_dictionary)
 	input("Extraction successful, press enter to continue")
