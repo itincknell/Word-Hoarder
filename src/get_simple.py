@@ -11,18 +11,21 @@ Description:
 		i-stem or not; returns true or false
 '''
 
-#from wiktionaryparser import WiktionaryParser
 from unidecode import unidecode
 import load_dict
 import pickle
 
 
 def load_dump():
-	print("Loading previous Latin trie...")
-	load_dict.change_path("dumps_sorted")
-	with open("Latin" + '-trie.txt','rb') as openFile:
-		t = pickle.load(openFile)
-	return t['definitions']
+	try:
+		print("Loading previous Latin trie...")
+		load_dict.change_path("dumps_sorted")
+		with open("Latin" + '-trie.txt','rb') as openFile:
+			t = pickle.load(openFile)
+		return t['definitions']
+	except FileNotFoundError:
+		print("'Latin-trie.txt' not found in 'dumps_sorted' directory")
+		return None
 
 
 def load_i_stem_trie():
@@ -309,6 +312,10 @@ def get_simple(partOfSpeech,parts,heading):
 
 	# return string
 	
+	'''	this 'i_stem_mode' return option was part of creating 
+		the 'Latin-i_stem_nouns-trie.txt' file.
+		Could probably be removed now.
+	'''
 	if i_stem_mode:
 		if i_stem and partOfSpeech == 'noun':
 			return simpleParts
@@ -395,9 +402,14 @@ def set_flags_la(parts,partOfSpeech):
 # I-STEM TEST
 # # # # # # # # # # # # # 
 def i_stem_test(parts,heading,flags):
+	''' this test requires the 'Latin-i_stem_nouns-trie.txt' starter file 
+		or a previously parsed 'Latin-trie.txt' file in order to work
+	'''
+	if t is None: # key file missing
+		return False
+
 	if quickmode:
 		if parts[0] in t and flags['third_decl']:
-			#print(f"{parts[0]},{parts[1]} is i_stem")
 			return True
 		else:
 			return False
