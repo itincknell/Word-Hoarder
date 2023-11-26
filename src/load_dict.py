@@ -25,6 +25,14 @@ global PARENT_DIR
 # save the parent directory of the current file into a global variable
 PARENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# define names for important directories
+KAIKKI_JSON_FILES = 'kaikki_json_files'
+SORTED_LANGUAGE_FILES = 'sorted_language_files'
+SUPPLEMENTARY_LANGUAGE_FILES = 'supplementary_language_files'
+USER_CREATED_DICTIONARIES = 'user_created_dictionaries'
+FLASHCARD_TEMPLATE_FILES = 'flash_card_templates'
+FORMATTED_FLASHCARD_FILES = 'formatted_flashcard_files'
+
 # CHANGE PATH
 # # # # # # # # # 
 def change_path(folder=''):
@@ -34,12 +42,10 @@ def change_path(folder=''):
 	os.chdir(path)
 # END CHANGE PATH
 
-
-
 # FIND DICT
 # # # # # # # 
 def find_dict():
-	change_path('dictionaries')
+	change_path(USER_CREATED_DICTIONARIES)
 	myFiles = glob.glob('*.txt')
 	if myFiles == []:
 		print("\nSorry no saved dictionaries")
@@ -57,11 +63,10 @@ def find_dict():
 	return current_dict
 # END FIND DICT
 
-
 # CREATE DICT
 # # # # # # # # 
 def create_dict():
-	change_path('dictionaries')
+	change_path(USER_CREATED_DICTIONARIES)
 	myFiles = glob.glob('*.txt')
 	while True:
 		print("What do you want to name new dictionary?: (0 to go back)\n==================================\n")
@@ -94,15 +99,11 @@ def create_dict():
 					exit_loop = True
 # END CREATE DICT
 
-
-
-
-
 # COMBINE DICT
 # # # # # # # # # # # # 
 def combine_dict(current_dict,combo_dict=[]):
 	if combo_dict == []:
-		change_path('dictionaries')
+		change_path(USER_CREATED_DICTIONARIES)
 		myFiles = glob.glob('*.txt')
 		if current_dict['file'] in myFiles:
 			myFiles.remove(current_dict['file'])
@@ -156,111 +157,3 @@ def pick_language():
 		return None
 	else:
 		return language_options[int(user_input)-1]
-
-# EXTRACT LIST
-# # # # # # # # # # # # # # # 
-def extract_list(current_dict,mode=0):
-
-	change_path('lists')
-	myFiles = glob.glob('*.txt')
-	if myFiles == []:
-		print("\nSorry no saved lists")
-		return 
-	else:
-		options = {'0':f"\nChoose from the following files: (0 to go back)\n"}
-		for index in range(len(myFiles)):
-			options[f"{str(index + 1)}"] = f"{index + 1}. {myFiles[index]}\n"
-		user_input = get_selection(options)
-		if user_input == '0':
-			return 
-		else:
-			with open(myFiles[int(user_input)-1],'r') as file:
-				word_list = [unidecode(line).strip("\n\t, ") for line in file.readlines()]
-
-		new_dictionary = {'definitions':[],'file':'','language':'Latin'}
-	while True:
-		if mode == 1:
-			file_name = input("Enter name of new dictionary ('0' to go back): ")
-			if file_name == '0':
-				return
-			else:
-				user_input = pick_language()
-				if user_input == None:
-					continue
-				else:
-					new_dictionary['language'] = user_input
-					new_dictionary['file'] = file_name + ".txt"
-		else:
-			new_dictionary['language'] = current_dict['language']
-			new_dictionary['file'] =  myFiles[int(user_input)-1]
-
-		#new_dictionary['file'] = file_name + ".txt"
-		tag = ''
-		user_input = input("Enter a tag to apply to dictionary entries (max=1,'0' to skip): ")
-		if user_input != '0':
-			tag = user_input
-
-
-
-		if new_dictionary['language'] != 'Latin':
-			#dump_dict = parser_shell.load_dump(new_dictionary['language'])
-			for word in word_list:
-				for i in range(len(dump_dict['definitions'])):
-					if dump_dict['definitions'][i]['handle'] == word:
-						dump_dict['definitions'][i]['tags'].append(tag)
-						new_dictionary['definitions'].append(copy.deepcopy(dump_dict['definitions'][i]))
-		else:
-			alpha = {'a':[],
-			'b':[],
-			'c':[],
-			'd':[],
-			'e':[],
-			'f':[],
-			'g':[],
-			'h':[],
-			'i':[],
-			'j':[],
-			'k':[],
-			'l':[],
-			'm':[],
-			'n':[],
-			'o':[],
-			'p':[],
-			'q':[],
-			'r':[],
-			's':[],
-			't':[],
-			'u':[],
-			'v':[],
-			'w':[],
-			'x':[],
-			'y':[],
-			'z':[],
-			'misc':[]}
-			for key in alpha:
-				alpha[key] = parser_shell.load_big_language(key,current_dict['language']) 
-			
-			for word in word_list:
-				if word[0].lower() not in 'abcdefghijklmnopqrstuvwxyz':
-					key = 'misc'
-				else:
-					key = word[0].lower()
-				for i in range(len(alpha[key]['definitions'])):
-					if unidecode(alpha[key]['definitions'][i]['handle']) == unidecode(word):
-						alpha[key]['definitions'][i]['tags'].append(tag)
-						new_dictionary['definitions'].append(copy.deepcopy(alpha[key]['definitions'][i]))
-		if mode == 1:
-			change_path('dictionaries')
-			with open(new_dictionary['file'],mode = 'wb') as openFile:
-				pickle.dump(new_dictionary, openFile)
-			print(f"{new_dictionary['file']} successfully saved")
-		else:
-			combine_dict(current_dict,new_dictionary)
-		return
-
-
-
-
-
-
-

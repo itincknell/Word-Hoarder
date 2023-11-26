@@ -2,7 +2,7 @@
 from bs4 import BeautifulSoup
 import tables
 import flashcard_html_utilities
-from load_dict import change_path
+from load_dict import change_path, FORMATTED_FLASHCARD_FILES
 from get_selection import get_selection
 from copy import deepcopy
 import random
@@ -276,7 +276,7 @@ def clean_page_list(page_list):
 def print_tables(tables_list):
 	out_file = 'OldEnglishflashcardtables.txt'
 	original_stdout = sys.stdout 
-	change_path('flashcards')
+	change_path(FORMATTED_FLASHCARD_FILES)
 	sys.stdout = open(out_file,'w')
 	random_list = list(range(len(tables_list)))
 	random.shuffle(random_list)

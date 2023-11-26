@@ -1,7 +1,7 @@
 import json, pickle
 import glob
 import os
-from load_dict import change_path
+from load_dict import change_path, FLASHCARD_TEMPLATE_FILES
 from get_selection import get_selection
 from unidecode import unidecode
 from copy import deepcopy
@@ -18,7 +18,7 @@ def debug_print(message):
 		print(f"[Line {line_number}] - {message}")
 
 def get_tables(language):
-	change_path('tables')
+	change_path(FLASHCARD_TEMPLATE_FILES)
 	myFiles = glob.glob('*.txt')
 	table_file = language.replace(" ","") + "-tables.txt"
 	if table_file not in myFiles:
@@ -30,7 +30,7 @@ def get_tables(language):
 		return tables_list
 
 def get_forms(language):
-	change_path('tables')
+	change_path(FLASHCARD_TEMPLATE_FILES)
 	myFiles = glob.glob('*.txt')
 	form_file = language.replace(" ","") + "-forms.txt"
 	if form_file not in myFiles:
@@ -163,7 +163,7 @@ def replace_greek_ii(word):
 
 
 def save_tables(tables_list,file):
-	change_path('tables')
+	change_path(FLASHCARD_TEMPLATE_FILES)
 	with open(file,'w') as f:
 		json.dump(tables_list,f)
 
@@ -202,32 +202,11 @@ def table_options(language):
 			template_options(language)
 		elif user_input == '0':
 			return
-'''
-def template_options(language):
-	print('re-doing all templates')
-	change_path('templates')
-	myFiles = glob.glob('*.txt')
-	template_file = language.replace(" ","") + "_templates.txt"
-	if template_file not in myFiles:
-		templates = []
-	else:
-		with open(template_file,'r') as f:
-			templates = json.load(f)
-	for t in templates:
-		if t['POS'] == 'verb':
-			t = tables_greek_ext.get_forms(t)
 
-	change_path('templates')
-	sort_tables(templates,language)
-	with open(template_file,'w') as f:
-		json.dump(templates,f)
 
-	print('re-doing all templates succesful')
-	return
-'''
 def template_options(language):
 	while True:
-		change_path('templates')
+		change_path(FLASHCARD_TEMPLATE_FILES)
 		myFiles = glob.glob('*.txt')
 		template_file = language.replace(" ","") + "_templates.txt"
 		if template_file not in myFiles:
@@ -257,7 +236,7 @@ def template_options(language):
 						edit_template(templates[i],language)
 						break
 
-		change_path('templates')
+		change_path(FLASHCARD_TEMPLATE_FILES)
 		sort_tables(templates,language)
 		with open(template_file,'w') as f:
 			json.dump(templates,f)
@@ -296,7 +275,7 @@ def get_template_options(templates):
 	return options, keys
 
 def auto_template(dictionary,word):
-	change_path('templates')
+	change_path(FLASHCARD_TEMPLATE_FILES)
 	myFiles = glob.glob('*.txt')
 	language = dictionary['language']
 	template_file = language.replace(" ","") + "_templates.txt"
@@ -327,7 +306,7 @@ def auto_template(dictionary,word):
 			if template:
 				templates.append(template)
 
-	change_path('templates')
+	change_path(FLASHCARD_TEMPLATE_FILES)
 	sort_tables(templates,language)
 	with open(template_file,'w') as f:
 		json.dump(templates,f)
@@ -388,7 +367,7 @@ def short_line(line,limit):
 	return line
 
 def get_template(language):
-	change_path('templates')
+	change_path(FLASHCARD_TEMPLATE_FILES)
 	myFiles = glob.glob('*.txt')
 	template_file = language.replace(" ","") + "_templates.txt"
 	if template_file not in myFiles:
@@ -615,26 +594,4 @@ def print_tables(tables_list,language):
 	elif language == 'Old English':
 		tables_oe_ext.print_tables(tables_list)
 	print("\n**************************\n\nFlashcards printed to file\n\n**************************\n")
-'''
 
-#import parser_shell, word_print_edit, edit_dictionary, edit_entry
-def add_definition(language):
-
-	while True:
-		change_path('dumps sorted')
-		wiki_dump = parser_shell.load_dump(language)
-		combo_word = parser_shell.choose_from_alpha(wiki_dump,[],language)
-		if combo_word == 'end' or combo_word == 'return to top' or combo_word == 'back':
-			return None
-		else:
-			if len(combo_word['entries']) > 1:
-				selection = word_print_edit.select_entry(combo_word['entries'],"Choose the definition you want to use:")
-			else:
-				selection = 0
-			number = edit_entry.select_definition(combo_word['entries'][selection],"Choose the line you want to use:")
-			definition = combo_word['entries'][selection]['senses'][number]['gloss']
-			if selection == None:
-				return None
-			else:
-				return definition
-'''

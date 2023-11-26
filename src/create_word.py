@@ -3,7 +3,7 @@ Description:
 
 	create word:
 		create a new word based on user input
-		intended to be used if valid latin word cannot be retrieved by wiktionary parser
+		intended to be used if valid word cannot be retrieved from language dictionary
 
 	create entry:
 		create a new entry within a word
@@ -49,11 +49,11 @@ def create_word(current_dict,tags):
 	new_word['entries'][0], dummy = edit_entry.edit_entry(new_word['entries'][0],new_word)
 
 	# call word options, from here return
-	load_dict.change_path('dumps_sorted')
+	load_dict.change_path(SORTED_LANGUAGE_FILES)
 	if current_dict['language'] == 'Latin' or current_dict['language'] == "Ancient Greek":
 		wiki_dump = parser_shell.load_big_language(new_word['heading'][0],current_dict['language'])
 	else:
-		wiki_dump = parser_shell.load_dump(current_dict['language'])
+		wiki_dump = parser_shell.load_sorted_language(current_dict['language'])
 	parser_shell.save_word(new_word,wiki_dump,2)
 	current_dict = parser_shell.save_word(new_word,current_dict)
 	return current_dict

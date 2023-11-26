@@ -21,20 +21,21 @@ import sys
 import pickle
 from unidecode import unidecode
 import re
-import random
 
 import word_print_edit
 import parser_shell
 import word_methods
 import get_selection
 import edit_all
-import load_dict
+from load_dict import change_path, USER_CREATED_DICTIONARIES, FORMATTED_FLASHCARD_FILES
 from edit_entry import pretty_print_tags
 
 # EDIT DICTIONARY
 # # # # # # # # # # # # 
 def edit_dictionary(current_dict):
-
+	'''	This is a user menu for editing either inidividual definitions or
+		the entire current user dictionary (using the edit_all module)	
+	'''
 	while True:
 
 		# dictionary options
@@ -75,7 +76,8 @@ def edit_dictionary(current_dict):
 # WORD LOOK UP
 # # # # # # # # # # # # # # # # # # # 
 def word_look_up(current_dict,look_up_word=None):
-
+	'''	Functionality to look-up a word by searching
+	'''
 	while True:
 		# set/reset flag
 		word_found = False
@@ -106,6 +108,8 @@ def word_look_up(current_dict,look_up_word=None):
 # END WORD LOOK UP
 
 def subset_test(tags,word_tags):
+	'''	Utility function to test if tags argument is a subset of word_tags argument
+	'''
 	result = True
 	for i in tags:
 		if i not in word_tags:
@@ -116,8 +120,10 @@ def subset_test(tags,word_tags):
 # WORD LIST
 # # # # # # # # # # # # # # 
 def word_list(current_dict,tags):
-	# whole function contained in loop
-	# flag begins set to false
+	'''	Functionality to selected a definition from a (possibly very long) 
+		number list of the user's current dictionary
+	'''
+
 	invalid_selection = False
 	while True:
 
@@ -183,8 +189,6 @@ def word_list(current_dict,tags):
 		print("Select definition ('0' to go back)")
 		user_input = input(": ")
 
-
-
 		# Option to go back to edit dictionary
 		if user_input == '0':
 			return current_dict
@@ -206,10 +210,12 @@ def word_list(current_dict,tags):
 # EXISTING WORD OPTIONS
 # # # # # # # # # # # # # # # # # # # 
 def existing_word_options(current_dict,word):
-
-
+	'''	Options once a word has been selected are
+		Delete, Edit, re-look-up the word, or split 
+		the word entries between multiple definitions
+	'''
 	# Set directory 
-	load_dict.change_path('dictionaries')
+	change_path(USER_CREATED_DICTIONARIES)
 
 	# whole function contained in loop
 	while True:
@@ -272,13 +278,20 @@ def existing_word_options(current_dict,word):
 			return current_dict
 # END EXISTING WORD OPTIONS
 
-def pos_test_part_latin(definition,pos):
+def pos_test_latin_definitions(definition,pos):
+	'''	Utility function for dividing flashcard sets by partOfSpeech
+		Returns false if no entry has the correct partOfSpeech
+	'''
 	for entry in definition['entries']:
-		if pos_test_part_latin_2(entry['partOfSpeech'],pos):
+		if pos_test_latin_entries(entry['partOfSpeech'],pos):
 			return True
 	return False
 
-def pos_test_part_latin_2(entry_pos,pos):
+def pos_test_latin_entries(entry_pos,pos):
+	'''	Utility function for dividing flashcard sets by partOfSpeech
+		Returns True only if the entry argument has the correct 
+		partOfSpeech
+	'''
 	if pos == 'adjective':
 		if entry_pos == 'adjective' or entry_pos == 'participle':
 			return True
@@ -300,13 +313,20 @@ def pos_test_part_latin_2(entry_pos,pos):
 		else:
 			return True
 
-def pos_test_part_greek(definition,pos):
+def pos_test_greek_definitions(definition,pos):
+	'''	Utility function for dividing flashcard sets by partOfSpeech
+		Returns false if no entry has the correct partOfSpeech
+	'''
 	for entry in definition['entries']:
-		if pos_test_part_greek_2(entry['partOfSpeech'],pos):
+		if pos_test_greek_entries(entry['partOfSpeech'],pos):
 			return True
 	return False
 
-def pos_test_part_greek_2(entry_pos,pos):
+def pos_test_greek_entries(entry_pos,pos):
+	'''	Utility function for dividing flashcard sets by partOfSpeech
+		Returns True only if the entry argument has the correct 
+		partOfSpeech
+	'''
 	if pos == 'verb':
 		if entry_pos == 'verb':
 			return True
@@ -320,39 +340,50 @@ def pos_test_part_greek_2(entry_pos,pos):
 
 
 # PRINT DICT
-# function prints a loaded dictionary as text to a file with ':' separators
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-def print_dict(current_dict,mode='Quizlet'):
+def print_dict(current_dict):
+	'''	Function prints a loaded dictionary as text to a file with special 
+		separator character and html tags for formatting. 
+		Currently focused on supporting Anki flashcard import tool.
+
+		TODO: Add functionality to print a flashcard deck based on user 
+		selected tags. This is already implemented in 'filter_gloss' function
+		that pretty print a page of definitions (See below).
+	'''
 
 	# change file path to 'prints' folder
-	load_dict.change_path('flashcards')
+	change_path(FORMATTED_FLASHCARD_FILES)
 	myFiles = glob.glob('*.txt')
-	if current_dict['language'] == "Latin":
+
+	# option to split flashcard decks by part of speech
+	print("Split flashcard sets by part of part of speech?")
+	user_input = input("Enter 'y' to split, otherwise press enter: ")
+
+	# different setting for Greek and Latin. 
+	# TODO: Allow user to customize these options
+	if current_dict['language'] == "Latin" and user_input.lower() == 'y':
 		split = True
 		pos_list = ['noun','verb','adjective','other']
-		function, function2 = pos_test_part_latin, pos_test_part_latin_2
-	elif current_dict['language'] == "Ancient Greek":
+		pos_test_definitions, pos_test_entries = pos_test_latin_definitions, pos_test_latin_entries
+	elif current_dict['language'] == "Ancient Greek" and user_input.lower() == 'y':
 		split = True
 		pos_list = ['verb','other']
-		function, function2 = pos_test_part_greek, pos_test_part_greek_2
+		pos_test_definitions, pos_test_entries = pos_test_greek_definitions, pos_test_greek_entries
 	else:
 		split = False
 		pos_list = ['other']
+		pos_test_definitions = pos_test_entries = lambda x,y:True
+
 	# Special separator character
 	c = '|'
-	counter = 0
-	limit = 49000
-	files = 1
 
 	while True:
-		tags = []
-		tag_mode = '2'
 
 		# Save a reference to the original standard output
 		original_stdout = sys.stdout 
 
+		# create a different file for each pos in pos_list
 		for pos in pos_list:
-
 			if split:
 				file_name = current_dict['language'].replace(' ','') + "-" + pos.upper() + '-Flashcards.txt'
 			else:
@@ -361,38 +392,42 @@ def print_dict(current_dict,mode='Quizlet'):
 			# assign user selected file to output
 			sys.stdout = open(file_name, 'w')
 
-			dict_range = list(range(len(current_dict['definitions'])))
-			random.shuffle(dict_range)
-
 			# Loop through words in current_dict
-			for i in dict_range:
-				if function(current_dict['definitions'][i],pos) or not split:
-					pass
-				else:
+			for i in range(len(current_dict['definitions'])):
+
+				# if pos test returns False and split == True, skip this entire definition
+				if pos_test_definitions(current_dict['definitions'][i],pos) == False and split == True:
 					continue
 
+				# start new string to by printed as next line in flashcard file
 				word_string = '<P align="left"><!--' + pos + f"-->{current_dict['definitions'][i]['heading'].strip()}</P>{c}"
 
+				# loop through the entries in the definition and print only those matching 'pos'
 				for j in range(len(current_dict['definitions'][i]['entries'])):
 					entry = current_dict['definitions'][i]['entries'][j]
 					partOfSpeech = entry['partOfSpeech']
-					if function2(partOfSpeech,pos) or not split:
-						pass
-					else:
+
+					# if pos test returns False and split == True, skip this particular entry
+					if pos_test_entries(partOfSpeech,pos) == False and split == True:
 						continue
 
-					entry = current_dict['definitions'][i]['entries'][j]
+					# include etymology string is less than 126 characters
 					if 'etymology' in entry:
 						if len(entry['etymology']) <= 125:
-							word_string +=  f'<P align="left">{entry["etymology"]}</P>' 
+							word_string +=  f'<P align="left">{entry["etymology"]}</P>'
+
+					# returns the rest of the entry with proper formatting 
 					word_string += get_entry_string(entry,current_dict['language'])
 
+				# add separator character between end of back of card - beginning of tags
 				word_string += c
 
+				# add tags as a comma separated list in double quotes
 				for tag in current_dict['definitions'][i]['tags']:
 					word_string += '"' + tag + '"; '
 				word_string.strip('; ')
 
+				# print formatted flashcard string to file
 				print(word_string)
 
 
@@ -404,31 +439,38 @@ def print_dict(current_dict,mode='Quizlet'):
 # END PRINT DICT
 
 def split_tags(tags,next_index,previous_tags):
+	'''	This function attempts to group tags together when multiple
+		senses have a set of common tags. If a sense differs from a 
+		group by a single tag the spoiler is inserted into the line
+		for the sense to preserve the grouping.
+	'''
 	current_index = next_index - 1
 
-	''' If previous (current) tags and current tags both exist '''
+	# If previous (current) tags and current tags both exist 
 	if previous_tags != [] and tags[current_index] != []:
 		match = True
+		# previous tags longer than current tags
 		if len(previous_tags) > len(tags[current_index]):
 			match = False
 		else:
+			# check if first n tags match between previous and current tag sets
 			for i in range(len(previous_tags)):
 				if previous_tags[i] != tags[current_index][i]:
 					match = False
-		''' If all previous (common) tags match with first n current tags '''
+		# If all previous (common) tags match with first n current tags 
 		if match:
-			''' Seperate current into common and distinct tags '''
+			# Seperate current into common and distinct tags 
 			return tags[current_index][:i+1], tags[current_index][i+1:]
 
-	''' Current did not match previous common tags, inspect next tags '''
+	# Current did not match previous common tags, inspect next tags 
 	if len(tags) > next_index:
 		if tags[next_index] != []:
-			''' Next tags exist and are not empty '''
+			# Next tags exist and are not empty '''
 			if tags[next_index] == tags[next_index - 1]:
-				''' Tags are exactly the same, all current tags will be common tags '''
+				# Tags are exactly the same, all current tags will be common tags 
 				return tags[current_index], []
 
-			''' Find the smaller of the two lists '''
+			# Find the smaller of the two lists 
 			if len(tags[current_index]) <= len(tags[next_index]):
 				shorter = tags[current_index]
 				longer = tags[next_index]
@@ -437,109 +479,109 @@ def split_tags(tags,next_index,previous_tags):
 				longer = tags[current_index]
 			for i in range(len(shorter)):
 				if shorter[i] != longer[i]:
-					''' Once lists are no longer the same we have common and distict tags '''
+					# Once lists are no longer the same we have common and distict tags 
 					if i == 0:
-						''' If no matches, all tags are common '''
+						# If no matches, all tags are common 
 						return tags[current_index], []
-					''' Else use index to seperate common and distinct '''
+					# Else use index to seperate common and distinct 
 					return tags[current_index][:i], tags[current_index][i:]
 
-	''' If next tags don't exist or are empty, all tags are common tags '''
+	# If next tags don't exist or are empty, all tags are common tags '''
 	return tags[current_index], []
 
 
 def get_entry_string(entry,language):
-	entry_string = ''
-	entry_string += f'<P align="left"><b>' + f"{entry['simpleParts'].strip()}</b><br>"
-	text = [definition['gloss'] for definition in entry['senses']]
-	def_tags = [definition['tags'] for definition in entry['senses']]
-	if language == "Latin":
-		text = short_senses(text,def_tags)
-	bank = ["*","^","†","∆"]
-	custom = []
-	while text[0][-1] in bank:
-		custom.append(text[0][-1])
-		text[0] = text[0][:-1]
-	
-	if custom:
-		if len(custom) == 4:
-			entry_string += f'<ol align="left">' #style="color:#750265;">'
-		elif len(custom) >= 2:
-			entry_string += f'<ol align="left">' # style="color:#5C4033;">'
-		elif len(custom) == 1:
-			if custom[0] == f'*':
-				entry_string += f'<ol align="left">' # style="color:#00008B";">'
-			elif custom[0] == '^':
-				entry_string += f'<ol align="left">' # style="color:#006400";">'
-			elif custom[0] == '†':
-				entry_string += f'<ol align="left">' # style="color:#483C32";">'
-			elif custom[0] == '∆':
-				entry_string += f'<ol align="left">' # style="color:#7d022f";">'
-		entry_string += '<!--'
-		if "*" in custom:
-			entry_string += 'Oxford Desk Dictionary, '
-		if "^" in custom:
-			entry_string += 'Lewis and Short, '
-		if "†" in custom:
-			entry_string += 'Wiktionary, '
-		if "∆" in custom:
-			entry_string += 'Learn to Read Latin'
-		entry_string = entry_string.strip(", ") + '-->'
-	else:
-	
-		entry_string += f'<ol align="left">'
-	special_tags = ['LTRG','Oxford','Liddell & Scott','Athenaze']
+	'''	Functionality to format a definition with html tags so the
+		card with have left alignment, bolded heading and two level ordered lists
+		when diplayed in Anki flashcard manager.
+	'''
 
-	line_tags = def_tags[0]
+	# start with bolded simpleParts for entry heading
+	entry_string = f'<P align="left"><b>' + f"{entry['simpleParts'].strip()}</b><br>"
+
+	# change senses from list of dictionary to two lists
+	sense_glosses = [definition['gloss'] for definition in entry['senses']]
+	sense_tags = [definition['tags'] for definition in entry['senses']]
+
+	# short_senses attempts to trim down overly long senses for more readable flashcards
+	if language == "Latin":
+		sense_glosses = short_senses(sense_glosses)
+
+	# open first order list
+	entry_string += f'<ol align="left">'
+
+	# start with tags belonging to the first sense
+	line_tags = sense_tags[0]
+	# no previous tags
 	previous_tags = []
-	common_tags, distinct_tags = split_tags(def_tags,1,previous_tags)
+
+	# determines of current sense should continue to be grouped under same
+	# tags as previous and whether current grouping should be closed
+	common_tags, distinct_tags = split_tags(sense_tags,1,previous_tags)
+
+	# determine if a sublist should be started for the first sense
 	open_sublist = False
 	if line_tags:
 		open_sublist = True
 		entry_string += pretty_print_tags(common_tags,-1)
+
+	# next index is an arugment for split_tags
 	next_index = 1
-	for line, tags in zip(text,def_tags):
-		common_tags, distinct_tags = split_tags(def_tags,next_index,previous_tags)
+
+	# iterate through tuples of sense glosses and tags
+	for gloss, tags in zip(sense_glosses,sense_tags):
+
+		# determine if senses are compatible for grouping under common tags
+		common_tags, distinct_tags = split_tags(sense_tags,next_index,previous_tags)
 		previous_tags = common_tags
+
+		# indicates the current grouping must be closed
 		if common_tags != line_tags:
-			tag_break = False
-			for tag in line_tags:
-				if tag in special_tags:
-					tag_break = True
-			for tag in tags:
-				if tag in special_tags:
-					tag_break = False
 			line_tags = common_tags
+
+			# close previous sublist (grouped senses)
 			if open_sublist:
 				entry_string += "</ol></li>"
-			if tag_break:
-				entry_string += '<br>'
+
+			# if next/current sense has tags, start a new sublist
 			if common_tags != []:
 				open_sublist = True
 				entry_string += pretty_print_tags(common_tags,-1)
+			# othter senses will print to list level one
 			else:
 				open_sublist = False
+
+		# 'spoiler' tags are added into the line for the sense
 		if distinct_tags:
-			entry_string += '<li>' + "(" + ",".join(distinct_tags) + ") " + line.strip(";,. ").strip("†∆*^") + '</li>'
+			entry_string += '<li>' + "(" + ",".join(distinct_tags) + ") " + gloss.strip(";,. ").strip("†∆*^") + '</li>'
 		else:
-			entry_string += '<li>' + line.strip(";,. ").strip("†∆*^") + '</li>'
+			entry_string += '<li>' + gloss.strip(";,. ").strip("†∆*^") + '</li>'
+
 		next_index += 1
+
+	# close both list levels, add breaks to give space before next entry starts on multi-entry cards
 	if open_sublist:
 		entry_string += "</ol></li>"
-	entry_string += '</ol></P><br><br>' 
+	entry_string += '</ol></P><br><br>'
+
+	# return formated string to flashcard printing function
 	return entry_string
 
 
 # PRINT GLOSS SETUP
 # # # # # # # # # # # # 
 def print_gloss_setup(current_dict):
-
+	'''	Functionality to pretty print a list of word definitions so that is will fit well
+		into a standard page. The idea to allow the user to create study sheets for a 
+		particular set of tags such a textbook chapter or a section of a Latin text.
+	'''
 
 	# change file path to 'prints' folder
-	load_dict.change_path('glosses')
+	change_path('glosses')
 	myFiles = glob.glob('*.txt')
 
 	while True:
+		# give user option to select from all tags found in the current dictionary
 		master_list = word_methods.get_master_list(current_dict)
 		tags = word_methods.getTags([],'filter',master_list)
 
@@ -661,7 +703,7 @@ def print_gloss(current_dict,tags,partOfSpeech=None,tag_mode='1'):
 					# check if definition exceeds desired length
 					text = [d['gloss'] for d in word['entries'][x]['senses']]
 					dtags = [d['tags'] for d in word['entries'][x]['senses']]
-					#text = short_senses(text, dtags)
+
 					if len(text) == 1: 
 						entry_string += f"~) " + text[0].strip('*^†∆') + ";  "
 					else:
@@ -686,6 +728,8 @@ def print_gloss(current_dict,tags,partOfSpeech=None,tag_mode='1'):
 				elif current_dict['language'] == "Ancient Greek":
 						
 					entry_string = word['entries'][x]['simpleParts'][:word['entries'][x]['simpleParts'].find(')')+1].strip()
+
+					# TODO: this should be replaced with the get_visible_length function from the get_selection module
 					length_string = entry_string.lower().replace("θ",'t')
 					length_string = length_string.replace("χ",'k') 
 					length_string = length_string.replace('φ','f')
@@ -710,92 +754,80 @@ def print_gloss(current_dict,tags,partOfSpeech=None,tag_mode='1'):
 	return counter
 # END PRINT GLOSS
 
+''' The rest of these functions attempt to shorten senses that are overly long
+	to make more useful flashcards.
+'''
+
 # CHOP LINE
 # # # # # # # # # # # # # 
-def chop_line(text,tags):
-	size = sum([len(line) for line in text])
-	if len(text) < 3:
+def chop_line(senses):
+	'''	Determines how much each sense should be shortened based on
+		the total number of senses and the total characters
+	'''
+	size = sum([len(sense) for sense in senses])
+
+	if len(senses) < 3:
 		limit = 5
-	elif len(text) == 3:
+	elif len(senses) == 3:
 		limit = 4
-	elif len(text) > 3:
+	elif len(senses) > 3:
 		limit = 3
 
-	custom = []
-	bank = ["*","^","†","∆"]
-	special_tags = ['LTRG','Oxford','Liddell & Scott','Athenaze']
-	special = False
-	for i in range(len(text)):
-		if text[i] == "":
-			continue
-		for tag in tags[i]:
-				if tag in special_tags:
-					special = True
-		while text[i][-1] in bank:
-			if text[i][-1] not in custom:
-				custom.append(text[i][-1])
-			text[i] = text[i][:-1]
-	if custom:
-		c_string = ''
-		if "*" in custom:
-			c_string += "*"
-		if "^" in custom:
-			c_string += "^"
-		if "†" in custom:
-			c_string += "†"
-		if "∆" in custom:
-			c_string += "∆"
-		text[0] += c_string
-	elif special:
-		pass
-	elif size > 150:
-		for i in range(len(text)):
-			text[i] = short_line(text[i],limit)
-	return text
+	if size > 150:
+		for i in range(len(senses)):
+			senses[i] = short_line(senses[i],limit)
+	return senses
 
 
 # SHORT LINE
 # # # # # # # # # # 
 def short_line(line,limit):
+	'''	Attempts to shorten line, aborts under certain conditions such as
+		parens at the end (usually contain something important)
+	'''
 
-	#print(f"PRINT SHORT LINE WHILE TOP PRE SPLIT:\n{line}")
 	line = re.split(",|;",line)
 	stop = orstop = parstop = limit
+
+	# if line contains and 'or' avoid cutting before the or
 	for i in range(len(line)):
 		orlist = [x for x in line[i:] if " or " in x]
 		if orlist != []:
 			orstop = i + 1
 			continue
 		else:
-			#stop = max(i,limit)
 			break
+	# if line contains parens, avoid cutting before the last closing paren
 	for i in range(len(line)):
 		parlist = [x for x in line[i:] if ")" in x or "(" in x]
 		if parlist != []:
 			parstop = i + 1
 			continue
 		else:
-			#stop = max(i,limit)
 			break
+
+	# determine the least safe cutting point
 	stop = max(orstop,parstop,limit)
 	line = line[:stop]
-	new_text = ''
-	for i in range(len(line)):
-		new_text += line[i].strip() + ', '
-	line = new_text.strip(", ")
-	#print(f"PRINT END SHORT LINE:\n{line}")
+
+	# reconstruct string 
+	new_text = ", ".join(word.strip() for word in line)
+
 	return line
 
 # SHORT senses
 # # # # # # # # # # 
-def short_senses(text,tags):
+def short_senses(text):
+	'''	removes empty strings before and after calling chop_line
+	'''
 	while '' in text:
 		text.remove('')
-	text = chop_line(text,tags)
-	size = sum([len(line) for line in text])
+
+	text = chop_line(text)
 
 	while '' in text:
 		text.remove('')
+
 	for i in range(len(text)):
 		text[i] = text[i].strip(',;')
 	return text

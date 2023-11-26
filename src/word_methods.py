@@ -1,18 +1,4 @@
 
-'''
-Description:
-	
-	copy word:
-		takes a fetch and new_word
-		returns a new_word
-		take a result from the wiktionary parser and
-		copies a simpler version into a new_word taken as an argument
-
-	getTags:
-		takes a list of tags and allows user to add or delete tags
-'''
-
-#from get_simple import get_simple
 from edit_dictionary import chop_parens
 import re
 from unidecode import unidecode

@@ -1,7 +1,7 @@
 
 
 import parser_shell
-from load_dict import change_path
+from load_dict import change_path, SUPPLEMENTARY_LANGUAGE_FILES
 from copy import deepcopy
 import edit_all
 import pickle
@@ -194,10 +194,7 @@ import json
 
 def Lewis(new_dictionary={'definitions':[]}):
 
-
-
-	change_path('texts')
-	change_path('lewis-short-json-master')
+	change_path(SUPPLEMENTARY_LANGUAGE_FILES)
 
 	dictionary = {'file':'','definitions':[],"language":''}
 

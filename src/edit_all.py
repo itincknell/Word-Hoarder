@@ -12,7 +12,7 @@ import pickle, json
 from iteration_utilities import unique_everseen
 from copy import deepcopy
 from unidecode import unidecode
-import load_dict
+from load_dict import change_path, USER_CREATED_DICTIONARIES, FLASHCARD_TEMPLATE_FILES
 import word_print_edit
 import edit_entry
 import edit_dictionary
@@ -64,7 +64,7 @@ def edit_all(current_dict):
 				if i['entries'][0]['partOfSpeech'] == 'verb':
 					i['entries'][0]['simpleParts'] = auto_parts(i['entries'][0]['simpleParts'],True)					
 
-			load_dict.change_path('dictionaries')
+			change_path(USER_CREATED_DICTIONARIES)
 			openFile = open(current_dict['file'],mode = 'wb')
 			pickle.dump(current_dict, openFile)
 			openFile.close()	
@@ -112,7 +112,7 @@ import tables, tables_greek_ext
 
 def other_unknown(current_dict):
 	print('re-doing all verbs')
-	load_dict.change_path('templates')
+	change_path(FLASHCARD_TEMPLATE_FILES)
 	myFiles = glob.glob('*.txt')
 	template_file = "AncientGreek_templates.txt"
 	if template_file not in myFiles:
@@ -138,7 +138,7 @@ def other_unknown(current_dict):
 	user_input = input("Save new verb data (y/n)?")
 	if user_input.lower() == 'y':
 
-		load_dict.change_path('templates')
+		change_path(FLASHCARD_TEMPLATE_FILES)
 		sort_tables(templates,language)
 		with open(template_file,'w') as f:
 			json.dump(templates,f)
@@ -216,7 +216,7 @@ def change_file_name(current_dict):
 	if user_input == '0':
 		return current_dict
 	else:
-		load_dict.change_path('dictionaries')
+		change_path(USER_CREATED_DICTIONARIES)
 		current_dict['file'] = user_input + '.txt'
 		openFile = open(current_dict['file'],mode = 'wb')
 		pickle.dump(current_dict, openFile)
@@ -236,14 +236,14 @@ def replace_senses(current_dict):
 def load_latin(index_letter):
 	if index_letter.lower() not in 'abcdefghijklmnopqrstuvwxyz':
 		index_letter = 'misc'
-	load_dict.change_path("dumps_sorted")
+	change_path("dumps_sorted")
 	with open('Latin-' + index_letter.lower() + '.txt','rb') as openFile:
 		wiki_dump = pickle.load(openFile)
 	return wiki_dump
 
 
 def match_dictionaries(current_dict):
-	load_dict.change_path("dumps_sorted")
+	change_path("dumps_sorted")
 	trie_file = current_dict['language'].replace(" ","") + '-trie.txt'
 
 	print(f"Loading {trie_file}")
@@ -378,7 +378,7 @@ def special(current_dict,start=0):
 def replace_tag(current_dict):
 
 	# Set directory
-	load_dict.change_path('dictionaries')
+	change_path(USER_CREATED_DICTIONARIES)
 
 	while True:
 		tags = word_methods.get_master_list(current_dict)
@@ -423,7 +423,7 @@ def replace_tag(current_dict):
 def convert_to_set(current_dict):
 
 	# Set directory
-	load_dict.change_path('dictionaries')
+	change_path(USER_CREATED_DICTIONARIES)
 
 	# Convert all tags from lists to sets
 	for index in range(len(current_dict['definitions'])):
@@ -441,7 +441,7 @@ def convert_to_set(current_dict):
 def edit_subset(current_dict):
 
 	# Set directory
-	load_dict.change_path('dictionaries')
+	change_path(USER_CREATED_DICTIONARIES)
 	while True:
 
 		# option to set tags
@@ -614,7 +614,7 @@ def cut_parens_access(language):
 		for key in alpha:
 			cut_parens(alpha[key])
 	else:
-		load_dict.change_path("dumps_sorted")
+		change_path("dumps_sorted")
 		with open(language.replace(" ","") + 'Dump.txt','rb') as openFile:
 			wiki_dump = pickle.load(openFile)
 		cut_parens(wiki_dump)

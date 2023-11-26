@@ -3,7 +3,7 @@ from load_dict import *
 import word_methods
 import edit_dictionary
 from get_selection import get_selection, clear_screen
-import dump_parser
+import convert_file_utilities
 import os
 import tables
 from pyfiglet import figlet_format
@@ -59,7 +59,7 @@ while not exit_loop_1:
 	elif user_input == '2':
 		current_dict = create_dict()
 	elif user_input == '3':
-		dump_parser.sort_dump()
+		convert_file_utilities.convert_files()
 
 	# find/create will return {} if dict not loaded
 	# must have a valid dictionary to proceed to new loop

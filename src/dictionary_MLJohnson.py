@@ -1,12 +1,10 @@
 
-
-
-from load_dict import change_path
+from load_dict import change_path, SUPPLEMENTARY_LANGUAGE_FILES
 from copy import deepcopy
 import edit_all
 import pickle
 
-from dict_utilities import printpr
+from perseus_xml_utilities import printpr
 
 interval = 30
 level = 1
@@ -267,7 +265,7 @@ def Johnson_OED(new_dictionary):
 	# Start of actual MLJohnson code
 	# # # # # # # # # # # # # # # # 
 
-	change_path('texts')
+	change_path(SUPPLEMENTARY_LANGUAGE_FILES)
 
 	definitions = []
 	counter = 0

@@ -2,7 +2,7 @@
 from bs4 import BeautifulSoup
 
 import tables
-from load_dict import change_path
+from load_dict import change_path, FORMATTED_FLASHCARD_FILES, FLASHCARD_TEMPLATE_FILES, SUPPLEMENTARY_LANGUAGE_FILES
 from get_selection import get_selection
 from copy import deepcopy
 from unidecode import unidecode
@@ -269,7 +269,7 @@ def inside_out_noun(parts):
 	return forms
 
 def inside_out_verb(parts):
-	change_path("texts")
+	change_path(SUPPLEMENTARY_LANGUAGE_FILES)
 	with open('sum_forms.txt','r') as f:
 		sum_forms = json.load(f)
 	if parts['Present']['Active']['Indicative']['FPS'] == "sum":
@@ -662,7 +662,7 @@ def retreive_noun_forms(template):
 	return cases
 
 def add_sum_forms(page_list,i,alt=''):
-	change_path('texts')
+	change_path(SUPPLEMENTARY_LANGUAGE_FILES)
 	with open('sum_parts.txt','r') as f:
 		sum_forms = json.load(f)
 	if 'Imperfect' in page_list[i - 1].title():
@@ -788,7 +788,7 @@ def add_tables():
 						return
 
 def auto_add(tables_list,table_info,table_file):
-	change_path('templates')
+	change_path(FLASHCARD_TEMPLATE_FILES)
 	myFiles = glob.glob('*.txt')
 	template_file = "Latin_templates.txt"
 	if template_file not in myFiles:
@@ -1048,7 +1048,7 @@ def features_join(features):
 def print_forms():
 	out_file = 'Latin-FormCards.txt'
 	original_stdout = sys.stdout 
-	change_path('flashcards')
+	change_path(FORMATTED_FLASHCARD_FILES)
 	sys.stdout = open(out_file,'w')
 	forms_list = tables.get_forms("Latin")
 	random_list = list(range(len(forms_list)))
@@ -1071,11 +1071,9 @@ def print_tables(tables_list):
 	print_forms()
 	out_file = 'Latin-TableCards.txt'
 	original_stdout = sys.stdout 
-	change_path('flashcards')
+	change_path(FORMATTED_FLASHCARD_FILES)
 	sys.stdout = open(out_file,'w')
-	#random_list = list(range(len(tables_list)))
-	#random_list = filter_cards(tables_list,random_list)
-	#random.shuffle(random_list)
+
 	for i in range(len(tables_list)):
 		
 

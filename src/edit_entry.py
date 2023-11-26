@@ -23,39 +23,40 @@ from copy import deepcopy
 from tables_greek_ext import auto_parts
 from pyfiglet import figlet_format
 
+
+# string used multiple times
+confirm_str = "'1' to confirm, any other key to cancel: "
+
 # EDIT ENRTY
 # # # # # # # # 
 entry_string = ''
 def edit_entry(entry,new_word):
-
-	# string used multiple times
-	confirm_str = "'1' to confirm, any other key to cancel: "
-
-	# rest of function contained in loop
+	''' Menu for user options to edit an entry of a definition.
+		TODO: each option should be moved to a separate function.
+	'''
 	while True:
 		
 		# flag if only one definition exists
-		if len(entry['senses']) == 1:
-			singleton = True
-		else:
-			singleton = False
+		singleton = True if len(entry['senses']) == 1 else False
 
 		# display entry
 		entry_string = get_entry(entry)
 
-		# get user selection
+		# define user options
 		options = {
 		'1':"\n==================================\nEntry Options:\n>'1' to add definition\n",
 		'2':">'2' to change definition\n"}
 		if singleton:
 			options.update({
 				'3':">'3' to replace definition\n"})
-		# only display if more than one definition
+
+		# only display these options if more than one definition
 		if not singleton:
 			options.update({
 				'3':">'3' to replace all\n",
 				'4':">'4' to move definitions\n",
 				'5':">'5' to delete definitions\n"})
+
 		# more options
 		options.update({
 			'tag':">'tag' to tag defintions",
@@ -65,6 +66,7 @@ def edit_entry(entry,new_word):
 			'etym':">'etym' to change etymology\n",
 			'ps':">'ps' to change part of speech\n",
 			'0':">'0' to go back ",'00':">'00' to finish and save\n"})
+
 		user_input = get_selection(options,entry_string)
 
 		# Option to finish/go back
@@ -76,211 +78,48 @@ def edit_entry(entry,new_word):
 
 		# Option to add new
 		elif user_input == '1':
-			while True:
-				print("\nChoose postion of new definition (1-n)")
-				try:
-					place = int(input(": "))-1
-				except:
-					print("Invalid")
-					continue
-				break
-			if place < 0:
-				continue
-			print("\nEnter your new definition ('0' to go back) (ā, ē, ī, ō, ū)")
-			new_definition = {'gloss':input(': ')}
+			add_new(entry)
 
-			if new_definition['gloss'] != '0':
-				new_definition['tags'] = []
-				print("Enter definition tags ('0' to finish)")
-				new_tag = input(": ")
-				if new_tag != '0':
-					new_definition['tags'].append(new_tag)
-				entry['senses'].insert(place,new_definition)
-
+		# apply a new tag to some of the senses within the definition
 		elif user_input.lower() == 'tag':
-			exit_loop = False
-			while not exit_loop:		
-				print("Enter the tag you want to apply ('0' to go back)")
-				new_tag = input(": ")
-				if new_tag == '0':
-					exit_loop = True
-				else:
-					exit_inner_loop = False
-					while exit_inner_loop == False:
-						message = "\n==================================\nChoose the definition you want to tag\n'0' to go back"
-						selection = select_definition(entry,message)
-						if selection == None:
-							exit_inner_loop = True
-						else:
-							entry['senses'][selection]['tags'].append(new_tag)
+			add_new_tag(entry)
 
+		# remove all tags, currently an invisible option
 		elif user_input.lower() == "untag_all":
 			for i in entry['senses']:
 				i['tags'] = []
 
+		# remove a tag from some of the senses within the definition
 		elif user_input.lower() == 'untag':
-			exit_loop = False
-			while not exit_loop:		
-				message = "\n==================================\nChoose the definition you want to untag\n'0' to go back"
-				selection = select_definition(entry,message)
-				if selection == None:
-					exit_loop = True
-				elif entry['senses'][selection]['tags']:
-					exit_inner_loop = False
-					while exit_inner_loop == False:
-						for i in range(len(entry['senses'][selection]['tags'])):
-							print(f"{i+1}. {entry['senses'][selection]['tags'][i]}")
-						print("Select the tag you want to remove ('0' to go back)")
-						tag_no = input(": ")
-						if tag_no == '0':	
-							exit_inner_loop = True
-						elif int(tag_no) - 1 in range(len(entry['senses'][selection]['tags'])):
-							del entry['senses'][selection]['tags'][int(tag_no) - 1]
-							if entry['senses'][selection]['tags'] == []:
-								print("\ndefinitions has no more tags")
-								exit_inner_loop = True
-						else:
-							print("\ninvalid selection")
-				else:
-					print('\ndefinition has no tags')
-
+			remove_tag(entry)
 
 		# Option to change definition
 		elif user_input == '2':
-			exit_loop = False
-			while not exit_loop:
-				if singleton:
-					selection = 0
-				else:
-					message = "\n==================================\nChoose the definition you want to change\n'0' to go back"
-					selection = select_definition(entry,message)
-					if selection == None:
-						exit_loop = True
-				definition_string = ''
-				while selection != None:
-					definition_string += f"Definition: {entry['senses'][selection]['gloss']}\nTags: {', '.join(entry['senses'][selection]['tags'])}\n"
-					options = {'0':f"Change Definition Options:\n>'0' to go back",'00':">'00' to finish\n",'1':">'1' to remove words\n",
-					'2':">'2' to add text to the end\n",
-					'3':">'3' to add text to the beginning\n",
-					'4':">'4' to write new definition\n"}
-					user_input = get_selection(options,definition_string)
-					definition_string = ""
-					if user_input == '0':
-						selection = None
-						if singleton:
-							exit_loop = True
-					elif user_input == '00':
-						selection = None
-						exit_loop == True
-					elif user_input == '1':
-						entry['senses'][selection]['gloss'] = remove_words(entry['senses'][selection]['gloss'])
-					elif user_input == '2':
-						print("\nEnter text to add to definition ('0' to go back) (ā, ē, ī, ō, ū)")
-						new_text = input(': ')
-						if new_text != '0':
-							entry['senses'][selection]['gloss'] += new_text	
-					elif user_input == '3':
-						print("\nEnter text to add to definition ('0' to go back) (ā, ē, ī, ō, ū)")
-						new_text = input(': ')
-						if new_text != '0':
-							entry['senses'][selection]['gloss'] = new_text + entry['senses'][selection]['gloss']		
-					elif user_input == '4':
-						print("\nEnter your new definition ('0' to go back) (ā, ē, ī, ō, ū)")
-						new_definition = input(': ')
-						if new_definition != '0':
-							entry['senses'][selection]['gloss'] = new_definition
-							entry['senses'][selection]['tags'] = []
-							while True:
-								print("Enter definition tags ('0' to finish)")
-								new_tag = input(": ")
-								if new_tag == '0':
-									break
-								else:
-									entry['senses'][selection]['tags'].append(new_tag)
+			change_definition(entry,singleton)
 
 		# Option to move definition
 		elif user_input == '4' and not singleton:
+			move_definition(entry)
 
-			if len(entry['senses']) == 2:
-				entry['senses'] = move_entries(entry['senses'],1,0)
-			else:
-				exit_inner_loop = False
-				while not exit_inner_loop:
-					message = "\n==================================\nChoose the definition you want to move\n'0' to go back"
-					take = select_definition(entry,message)
-
-					if take != None:
-						message = "\nMove to what position?\n'0' to go back"
-						put = select_definition(entry,message)
-
-						if put != None:
-							entry['senses'] = move_entries(entry['senses'],take,put)
-
-					else:
-						exit_inner_loop = True
-
-		# Option to delete definition
+		# Option to delete definition		
 		elif user_input == '5' and not singleton:
-			exit_inner_loop = False
-			while not exit_inner_loop:
-				message = "\n==================================\nChoose the definition you want to delete\n'0' to go back"
-				selection = select_definition(entry,message)
+			delete_definition(entry)
 
-				if selection != None:
-					print(f"\nAre you sure to want to delete {selection+1}?")
-					user_input = input(confirm_str)
-
-					if user_input == '1':
-						del entry['senses'][selection]
-
-				else:
-					exit_inner_loop = True
-				if len(entry['senses']) == 1:
-					exit_inner_loop = singleton = True
-
-		# Options to replace all definitions
+		# Options to replace all definitions		
 		elif user_input == '3':
-			print("\nEnter your new definition ('0' to go back) (ā, ē, ī, ō, ū)")
-			new_definition = {'gloss':input(': ')}
+			replace_all(entry)
 
-			if new_definition != '0':
-				new_definition['tags'] = []
-
-				print("Enter definition tags ('0' to finish)")
-				new_tag = input(": ")
-				if new_tag != '0':
-					new_definition['tags'].append(new_tag)
-				entry['senses'] = [new_definition]
-
-		# Option to rewrite principle parts
+		# Option to rewrite principle parts			
 		elif user_input.lower() == 'parts':
-			print("'1' to auto retreieve verb parts (Greek only), any other key to proceed")
-			user_input = input(": ")
-			if user_input == '1':
-				entry['simpleParts'] = auto_parts(entry['simpleParts'],True)
-			else:
-				print("\nEnter your new principal parts ('0' to go back) (ā, ē, ī, ō, ū)")
-				new_definition = input(': ')
+			change_principle_parts(entry)
 
-				if new_definition != '0':
-					entry['simpleParts'] = new_definition
-
-		# Option to rewrite principle parts
+		# Option to rewrite etymology			
 		elif user_input.lower() == 'etym':
-			print("\nEnter your new etymology ('0' to go back) (ā, ē, ī, ō, ū) ('X' to delete)")
-			user_input = input(': ')
-			if user_input.upper() == "X":
-				entry['etymology'] = ''
-			elif user_input != '0':
-				entry['etymology'] = user_input
+			change_etymology(entry)
 
+		# option to change the partOfSpeech for a definition
 		elif user_input.lower() == 'ps':
-			print("\nEnter your new part of speech ('0' to go back)")
-			user_input = input(': ')
-			if user_input != '0':
-				entry['partOfSpeech'] = user_input
-
-
+			change_pos(entry)
 
 # END EDIT ENTRY
 
@@ -288,40 +127,70 @@ def edit_entry(entry,new_word):
 # REMOVE WORDS
 # # # # # # # # # # # 
 def remove_words(text):
+	'''	This function allows the user to delete a substring from a definition
+		by specifying the start and end point to 'snip'. The function displays
+		the definition on a grid showing the user how to specify the start and 
+		end point. 
+		The word is divided into rows of 26 characters where each character in
+		the row is under a column heading with the 26 letters of the alphabet.
+	'''
 	text = list(text)		
-	#print(f'text = {text}')
 	invalid = False
 	while True:
 		clear_screen()
+
+		# compute number of rows 
 		rows = 1+len(text)//26
-		#print(f"Rows  == {1+len(text)//26}")
+
+		# print top of box that surrounds grid
 		print('*' * 35 + " |")
+
 		for i in range(rows):
+
+			# print letters for row indices
 			print(f"Row ({chr(i + 65)}): ",end='')
-			#print(f"len(text[ 26 * i : 26 * (i + 1) ]) == {len(text[ 26 * i : 26 * (i + 1) ])}")
-			#print(f"text[ 26 * i : 26 * (i + 1) ] == {text[ 26 * i : 26 * (i + 1) ]}")
+
+			# print letters for columns indices
 			for j in range(len(text[ 26 * i : 26 * (i + 1) ])):
 				print(chr(j+65),end='')
+
+			# print '|'s to box in grid
 			pad = 26 - len(text[ 26 * i : 26 * (i + 1) ]) 
 			print(' ' * pad + " |")
 			print(' ' * 9,end='')
+
+			# print portion of sense that belong in this row
 			for j in range(26 * i,(26 * i) + len(text[ 26 * i : 26 * (i + 1) ])):
-				#print(f"range(26 * i,len(text[ 26 * i : 26 * (i + 1) ]) == {range(26 * i,len(text[ 26 * i : 26 * (i + 1) ]))}")
 				print(text[j],end='')
+
+			# print '-'s and '|'s to box in grid
 			pad = 26 - len(text[ 26 * i : 26 * (i + 1) ]) 
 			print(' ' * pad + " |")		
 			print('-' * 35 + " |")
+
+		# print '*'s and '|' to complete box
 		print('*' * 35 + " |")
+
+		# print message with UI instructions
 		print("To cut enter 'Start Row, Start Col, Stop Row, Stop Col':'RC,RC' ('0' to stop): ")
+
+		# if previous entry was invalid
 		if invalid:
 			print("\nInvalid entry\n\n")
 			invalid = False
+
 		user_input = input(": ")
+
+		# choice to exit
 		if user_input == '0':
+
+			# construct return string
 			return_text = ''
 			for i in range(len(text)):
 				return_text += text[i]
 			return return_text
+
+		# try to decode user input and cut substring
 		else:
 			try:
 				user_input = user_input.split(',')
@@ -334,12 +203,241 @@ def remove_words(text):
 				text = text[:start] + text[stop:]
 			except:
 				invalid = True
-# # # # # # # # # # # # # # # 
+# END remove_words
 
+
+def add_new(entry):
+	''' Add a new sense to the entry
+	'''
+	while True:
+		print("\nChoose postion of new definition (1-n)")
+		try:
+			place = int(input(": "))-1
+		except:
+			print("Invalid")
+			continue
+		break
+	if place < 0:
+		return
+	print("\nEnter your new definition ('0' to go back) (ā, ē, ī, ō, ū)")
+	new_definition = {'gloss':input(': ')}
+
+	if new_definition['gloss'] != '0':
+		new_definition['tags'] = []
+		print("Enter definition tags ('0' to finish)")
+		new_tag = input(": ")
+		if new_tag != '0':
+			new_definition['tags'].append(new_tag)
+		entry['senses'].insert(place,new_definition)
+
+def add_new_tag(entry):
+	''' Add a new tag, apply tag to multiple senses until finished
+	'''
+	exit_loop = False
+	while not exit_loop:		
+		print("Enter the tag you want to apply ('0' to go back)")
+		new_tag = input(": ")
+		if new_tag == '0':
+			exit_loop = True
+		else:
+			exit_inner_loop = False
+			while exit_inner_loop == False:
+				message = "\n==================================\nChoose the definition you want to tag\n'0' to go back"
+				selection = select_definition(entry,message)
+				if selection == None:
+					exit_inner_loop = True
+				else:
+					entry['senses'][selection]['tags'].append(new_tag)
+
+def remove_tag(entry):
+	'''	User selects a sense and tags to remove
+	'''
+	exit_loop = False
+	while not exit_loop:		
+		message = "\n==================================\nChoose the definition you want to untag\n'0' to go back"
+		selection = select_definition(entry,message)
+		if selection == None:
+			exit_loop = True
+		elif entry['senses'][selection]['tags']:
+			exit_inner_loop = False
+			while exit_inner_loop == False:
+				for i in range(len(entry['senses'][selection]['tags'])):
+					print(f"{i+1}. {entry['senses'][selection]['tags'][i]}")
+				print("Select the tag you want to remove ('0' to go back)")
+				tag_no = input(": ")
+				if tag_no == '0':	
+					exit_inner_loop = True
+				elif int(tag_no) - 1 in range(len(entry['senses'][selection]['tags'])):
+					del entry['senses'][selection]['tags'][int(tag_no) - 1]
+					if entry['senses'][selection]['tags'] == []:
+						print("\ndefinitions has no more tags")
+						exit_inner_loop = True
+				else:
+					print("\ninvalid selection")
+		else:
+			print('\ndefinition has no tags')
+
+def change_definition(entry,singleton):
+	''' User is given the option to remove text from any part of the sense
+		or add text to the beginning or ending of the sense. 
+	'''
+	while True:
+
+		# get user selection for sense to modify
+		if singleton:
+			selection = 0
+		else:
+			message = "\n==================================\nChoose the definition you want to change\n'0' to go back"
+			selection = select_definition(entry,message)
+			if selection == None:
+				return
+
+		
+		while selection != None:
+
+			# display gloss, tags and user options
+			definition_string = f"Definition: {entry['senses'][selection]['gloss']}\nTags: {', '.join(entry['senses'][selection]['tags'])}\n"
+			options = {'0':f"Change Definition Options:\n>'0' to go back",'00':">'00' to finish\n",'1':">'1' to remove words\n",
+			'2':">'2' to add text to the end\n",
+			'3':">'3' to add text to the beginning\n",
+			'4':">'4' to write new definition\n"}
+			user_input = get_selection(options,definition_string)
+
+			# option to go back (exit if singleton)
+			if user_input == '0':
+				selection = None
+				if singleton:
+					return
+			# option to exit back to edit entry menu
+			elif user_input == '00':
+				return
+
+			# option to remove text from any part of sense
+			elif user_input == '1':
+				entry['senses'][selection]['gloss'] = remove_words(entry['senses'][selection]['gloss'])
+
+			# option to add to end of sense
+			elif user_input == '2':
+				print("\nEnter text to add to definition ('0' to go back) (ā, ē, ī, ō, ū)")
+				new_text = input(': ')
+				if new_text != '0':
+					entry['senses'][selection]['gloss'] += new_text	
+
+			# option to add to beginning of sense
+			elif user_input == '3':
+				print("\nEnter text to add to definition ('0' to go back) (ā, ē, ī, ō, ū)")
+				new_text = input(': ')
+				if new_text != '0':
+					entry['senses'][selection]['gloss'] = new_text + entry['senses'][selection]['gloss']
+
+			# option to overwrite definition		
+			elif user_input == '4':
+				print("\nEnter your new definition ('0' to go back) (ā, ē, ī, ō, ū)")
+				new_definition = input(': ')
+				if new_definition != '0':
+					entry['senses'][selection]['gloss'] = new_definition
+					entry['senses'][selection]['tags'] = []
+					while True:
+						print("Enter definition tags ('0' to finish)")
+						new_tag = input(": ")
+						if new_tag == '0':
+							break
+						else:
+							entry['senses'][selection]['tags'].append(new_tag)
+
+def change_principle_parts(entry):
+	'''	principle parts set to requested user input
+	'''
+	print("'1' to auto retreieve verb parts (Greek only), any other key to proceed")
+	user_input = input(": ")
+	if user_input == '1':
+		entry['simpleParts'] = auto_parts(entry['simpleParts'],True)
+	else:
+		print("\nEnter your new principal parts ('0' to go back) (ā, ē, ī, ō, ū)")
+		new_definition = input(': ')
+
+		if new_definition != '0':
+			entry['simpleParts'] = new_definition
+
+def change_etymology(entry):
+	'''	etymology set to requested user input
+	'''
+	print("\nEnter your new etymology ('0' to go back) (ā, ē, ī, ō, ū) ('X' to delete)")
+	user_input = input(': ')
+	if user_input.upper() == "X":
+		entry['etymology'] = ''
+	elif user_input != '0':
+		entry['etymology'] = user_input
+
+def change_pos(entry):
+	'''	pos set to requested user input
+	'''
+	print("\nEnter your new part of speech ('0' to go back)")
+	user_input = input(': ')
+	if user_input != '0':
+		entry['partOfSpeech'] = user_input
+
+def move_definition(entry):
+	'''	validate user input for move entries function
+	'''
+	if len(entry['senses']) == 2:
+		entry['senses'] = move_entries(entry['senses'],1,0)
+	else:
+		exit_inner_loop = False
+		while not exit_inner_loop:
+			message = "\n==================================\nChoose the definition you want to move\n'0' to go back"
+			take = select_definition(entry,message)
+
+			if take != None:
+				message = "\nMove to what position?\n'0' to go back"
+				put = select_definition(entry,message)
+
+				if put != None:
+					entry['senses'] = move_entries(entry['senses'],take,put)
+
+			else:
+				exit_inner_loop = True
+
+def delete_definition(entry):
+	'''	validate user input to delete a sense
+	'''
+	exit_inner_loop = False
+	while not exit_inner_loop:
+		message = "\n==================================\nChoose the definition you want to delete\n'0' to go back"
+		selection = select_definition(entry,message)
+
+		if selection != None:
+			print(f"\nAre you sure to want to delete {selection+1}?")
+			user_input = input(confirm_str)
+
+			if user_input == '1':
+				del entry['senses'][selection]
+
+		else:
+			exit_inner_loop = True
+		if len(entry['senses']) == 1:
+			exit_inner_loop = singleton = True	
+
+def replace_all(entry):
+	'''	senses replaced with a single sense from user input
+	'''
+	print("\nEnter your new definition ('0' to go back) (ā, ē, ī, ō, ū)")
+	new_definition = {'gloss':input(': ')}
+
+	if new_definition != '0':
+		new_definition['tags'] = []
+
+		print("Enter definition tags ('0' to finish)")
+		new_tag = input(": ")
+		if new_tag != '0':
+			new_definition['tags'].append(new_tag)
+		entry['senses'] = [new_definition]	
 
 # MOVE ENTRIES
 # # # # # # # # # # # # # # # # # 
 def move_entries(entries,selection,new_position):
+	''' Rearrange object in list from selection to new_position
+	'''
 	if selection == new_position:
 		return
 	else:
@@ -353,10 +451,12 @@ def move_entries(entries,selection,new_position):
 # END MOVE ENTRIES
 
 def pretty_print_tags(tags,mode=[]):
-	
+	''' Utility function for printing senses in two level list
+		based on tag groupings
+	'''
+
 	''' -1 is mode for html printing '''
 	''' else mode corresponds to counter '''
-
 	if mode != -1:
 		string = f'{mode}. ('
 	else:
@@ -376,6 +476,12 @@ def pretty_print_tags(tags,mode=[]):
 
 
 def split_tags(senses,next_index,previous_tags):
+	''' This function tries to group a common tags between senses
+		so that the entry displays more cleanly. If most of the
+		tags match, the senses will be grouped in a sublist.
+		Any individual tags the would break up a logical grouping
+		may be added to the individual lines.
+	'''
 	current_index = next_index - 1
 
 	''' If previous (current) tags and current tags both exist '''
@@ -419,27 +525,13 @@ def split_tags(senses,next_index,previous_tags):
 	''' If next tags don't exist or are empty, all tags are common tags '''
 	return senses[current_index]['tags'], []
 
-'''
-
-1A. If first n tags match with next list
-
-	Common tags become common_tags, distinct tags become distinct tags
-
-1B. If no tags match OR next list does not exist
-
-	All tags become common_tags, no tags become distict tags
-
-2A. If previous common_tags matches with first n tags of current tags
-
-	identify distinct tags as distinct_tags
-
-2B. If common_tags does not match first n tags of current tags
-
-	Go back to Step 1
 
 
-'''
 def convert_message(message,string):
+	''' this function joins a new string to the message being built
+		by the get_entry function. Keeps the strings to < 129 
+		characters before separating into a new line.
+	'''
 	modulus = 129
 	if len(message) < modulus:
 		string += message + "\n"
@@ -458,6 +550,14 @@ def convert_message(message,string):
 	return string
 
 def get_entry(entry,mode='',trunc=False):
+	'''	Get a formatted string representing an entire word entry.
+		Prints the entry etymology, partOfSpeech and simpleParts,
+		followed by the senses for the entry.
+		The sense are printed in two list levels.
+		Level 1: arabic numerals, any untagged senses or a list of tags.
+		Level 2: lower-case roman numerals, one or more sense under a
+		common set of tags
+	'''
 	string = ''
 	iv = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x', 'xi', 'xii', 'xiii', 'xiv', 'xv', 'xvi', 'xvii', 'xviii', 'xix', 'xx', 'xxi', 'xxii', 'xxiii', 'xxiv', 'xxv', 'xxvi', 'xxvii', 'xxviii', 'xxix', 'xxx', 'xxxi', 'xxxii', 'xxxiii', 'xxxiv', 'xxxv', 'xxxvi', 'xxxvii', 'xxxviii', 'xxxix', 'xl', 'xli', 'xlii', 'xliii', 'xliv', 'xlv', 'xlvi', 'xlvii', 'xlviii', 'xlix', 'l']
 
@@ -539,7 +639,9 @@ def print_entry(entry,mode=''):
 # SELECT DEFINITIONS
 # # # # # # # # # # # # # # 
 def select_definition(entry,message):
-	# whole function contained in loop
+	''' user input function for a selecting a definition
+		for modification, deletion, etc.
+	'''
 	invalid = False
 	while True:
 		clear_screen()
@@ -555,8 +657,6 @@ def select_definition(entry,message):
 		# Option to go back
 		if user_input == '0':
 			return None
-		#elif user_input == '00':
-		#	return None, True
 
 		# confirm input is numeric
 		elif "-" in user_input:

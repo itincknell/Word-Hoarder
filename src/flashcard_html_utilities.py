@@ -1,3 +1,8 @@
+'''
+Fuctions used by tables.py to print flashcards with tables containing
+verb conjugations and noun/adjective cases
+'''
+
 
 def set_styles(body_string):
 	body_string += '<style type="text/css">\

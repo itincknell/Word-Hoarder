@@ -12,32 +12,32 @@ Description:
 '''
 
 from unidecode import unidecode
-import load_dict
+from load_dict import change_path, KAIKKI_JSON_FILES, SUPPLEMENTARY_LANGUAGE_FILES
 import pickle
 
 
-def load_dump():
+def load_sorted_language():
 	try:
 		print("Loading previous Latin trie...")
-		load_dict.change_path("dumps_sorted")
+		change_path(KAIKKI_JSON_FILES)
 		with open("Latin" + '-trie.txt','rb') as openFile:
 			t = pickle.load(openFile)
 		return t['definitions']
 	except FileNotFoundError:
-		print("'Latin-trie.txt' not found in 'dumps_sorted' directory")
+		print(f"'Latin-trie.txt' not found in {KAIKKI_JSON_FILES} directory")
 		return None
 
 
 def load_i_stem_trie():
-	load_dict.change_path("dumps_sorted")
+	change_path(SUPPLEMENTARY_LANGUAGE_FILES)
 	try:
 		with open("Latin-i_stem_nouns-trie.txt",'rb') as openFile:
 			t = pickle.load(openFile)
 		return t['definitions']
 	except FileNotFoundError:
-		print("'Latin-i_stem_nouns-trie.txt' not found in 'dumps_sorted' directory")
+		print(f"'Latin-i_stem_nouns-trie.txt' not found in {SUPPLEMENTARY_LANGUAGE_FILES} directory")
 		input("Enter to continue")
-		return load_dump()
+		return load_sorted_language()
 
 quickmode = True
 i_stem_mode = False
@@ -45,7 +45,7 @@ i_stem_mode = False
 if quickmode:
 	t = load_i_stem_trie()
 else:
-	t = load_dump()
+	t = load_sorted_language()
 
 # CHOP PARTS
 # # # # # # # # # # 

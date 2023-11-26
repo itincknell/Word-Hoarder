@@ -10,7 +10,7 @@ from unidecode import unidecode
 import difflib
 
 import parser_shell
-from load_dict import change_path, pick_language
+from load_dict import change_path, pick_language, KAIKKI_JSON_FILES, SUPPLEMENTARY_LANGUAGE_FILES
 import edit_all
 from get_selection import get_selection
 from language_splitter import split_language
@@ -41,7 +41,9 @@ def filter_tags(gloss_parts, existing_tags, Test):
 	return new_tags, gloss_parts
 
 def paren_cut(gloss, tags):
-
+	'''	Attempts to cut a parenthetical from the beginning of a sense if it 
+		duplicates the tags. 
+	'''
 	if gloss[0] != "(":
 		return gloss, tags
 
@@ -59,7 +61,10 @@ def paren_cut(gloss, tags):
 
 
 
-def add_def(senses,new_gloss,gloss_tags):
+def add_def(senses, new_gloss, gloss_tags):
+	'''	Attempts to read item from line 'senses' in json file to find 
+		all non-duplicate glosses and collect tags corresponding to each gloss
+	'''
 	if ")" in new_gloss:
 		for d in senses:
 			if new_gloss[new_gloss.find(")") + 2:] == d['gloss']:
@@ -81,6 +86,9 @@ def add_def(senses,new_gloss,gloss_tags):
 		senses.append({'gloss':new_gloss,'tags':copy.deepcopy(gloss_tags)})
 
 def create_senses(line_senses, tag_list):
+	'''	Iterate through line senses and collect all non-duplicate senses 
+		and tags corresponding to each sense. 
+	'''
 	senses = []
 	dupe_list = []
 
@@ -132,14 +140,21 @@ def create_senses(line_senses, tag_list):
 	return senses
 
 def get_file_selection(Test, test_file, test_language):
-	change_path('dumps_unsorted')
+	'''	User input function to select from avialable kaikki files
+	'''
+	change_path(KAIKKI_JSON_FILES)
+
 	if Test:
 		return test_file, test_language
+
 	else:
+		# fine all .json files in KAIKKI_JSON_FILES
 		myFiles = glob.glob('*.json')
 		if myFiles == []:
 			print("\nSorry no saved dictionaries")
 			return None, None
+
+		# prompt user to choose a file
 		else:
 			options = {'0':f"\nChoose from the following files: (0 to go back)\n"}
 			for index in range(len(myFiles)):
@@ -150,10 +165,15 @@ def get_file_selection(Test, test_file, test_language):
 				return None, None
 			else:
 				file = myFiles[int(user_input)-1]
+
+			# user must also tell the program what the language is
 			language = pick_language()
+
 		return file, language
 
 def print_debug_info(line, counter):
+	'''	Function for viewing unprocessed json data 
+	'''
 	print('\n')
 	print(f"\tline: {counter}, word: {line['word']}")
 	print("WORD ITEMS >>>>>>>>>>>>>>")
@@ -164,37 +184,56 @@ def print_debug_info(line, counter):
 		print(item)
 
 def handle_pos(line):
+	'''	Matches json pos abbreviations with those used in
+		word-hoarder definitions.
+	'''
 	pos_mapping = {
 		'adv': 'adverb',
 		'adj': 'adjective',
 		'prep': 'preposition',
 		'intj': 'interjection'
 	}
-
 	pos = line['pos']
 	line['pos'] = pos_mapping.get(pos, pos)
 	return line['pos']
 
 def handle_senses(line,tag_list):
+	''' json file contains edge cases where expected part of the
+		line entry are blank or missing.
+	'''
 	if 'tags' in line['senses'][0]:
+
 		tag = line['senses'][0]['tags']
+
+		# the dictionary may contain a few word with 'no-senses' etc. as 
+		# the only sense. The user should still have these available because
+		# it is easier to modify than creating a new definition from scratch.
 		if 'no-senses' in tag or 'no-gloss' in tag or 'empty-gloss' in tag:
 			if isinstance(tag,list):
 				return [{'gloss': ", ".join(tag), 'tags': []}]
 			else:
 				return [{'gloss': tag, 'tags': []}]
 		else:
+			
+			# normal case when the line has a full complement of senses
 			return create_senses(line['senses'], tag_list)
 	else:
+		# line may have senses but missing the 'tag' key
 		return create_senses(line['senses'], tag_list)
 
 def handle_etymology(line):
+	'''	Check is 'etymology' key is present
+	'''
 	if 'etymology_text' in line:
 		return line['etymology_text']
 	else:
 		return ''
 
 def handle_parts(line,get_simple=None):
+	'''	Will attempt to convert information in json line to simpleParts 
+		if the necessary ingrediants are present. Otherwise defaults to 
+		line['word']	
+	'''
 	if get_simple:
 		return get_simple(line['pos'], line['head_templates'][0]['expansion'], line['word']) if 'head_templates' in line else line['word']
 	else:
@@ -202,6 +241,8 @@ def handle_parts(line,get_simple=None):
 
 
 def handle_word_entry(line,tag_list,get_simple=None):
+	''' Retrieve data from json line and assign to word-hoarder entry
+	'''
 	return {
 		'partOfSpeech': handle_pos(line),
 		'principleParts': line['head_templates'][0]['expansion'] if 'head_templates' in line else line['word'],
@@ -213,6 +254,9 @@ def handle_word_entry(line,tag_list,get_simple=None):
 
 
 def handle_word(line,tag_list,language,get_simple=None):
+	''' Retrieve data from json line and assign to word-hoarder definition.
+		Definitions have only one entry until de-duplication.
+	'''
 	return {
 		'heading': line['word'],
 		'handle': unidecode(line['word']) if language in ["Latin", "Italian"] else line['word'],
@@ -222,6 +266,9 @@ def handle_word(line,tag_list,language,get_simple=None):
 	}
 
 def ui_template(new_dictionary,dict_str,shrt_str,cite,cite_2='',dict_f=""):
+	'''	Standard ui prompts to add supplemental dictionaries and display
+		information about data sources.
+	'''
 	user_input = input(f"\nAdd definitiions from: \"{dict_str}\"?"\
 		+ "\nType 'y' to add definitions, Press 'Enter' to continue: " )
 		
@@ -234,6 +281,8 @@ def ui_template(new_dictionary,dict_str,shrt_str,cite,cite_2='',dict_f=""):
 		thank(dict_str,shrt_str,n,cite)
 
 def thank(dict_str,shrt_str,length,cite,cite_2='',dict_f=""):
+	'''	Standard prompt to display attribution/information about data sources.
+	'''
 	print(f"\nYour dictionary now contains ( {length:,} ) unique definitions after adding {shrt_str}.")
 	print(f"Data files courtesy of {cite}.",end='')
 	if cite_2:
@@ -245,6 +294,9 @@ def thank(dict_str,shrt_str,length,cite,cite_2='',dict_f=""):
 		input(f"\n(Press 'Enter' to continue)")
 
 def parse_lines(input_file,tag_list,language,get_simple=None):
+	''' Receives an open kaikk.org json input_file and reads lines
+		to decode json objects into simplified word hoarder data structure.
+	'''
 	definitions_dict = {}
 	counter = 0
 	for line in input_file:
@@ -285,28 +337,14 @@ def parse_lines(input_file,tag_list,language,get_simple=None):
 	thank(dict_str,shrt_str,n,cite,cite_2)
 	return definitions
 
-# duplicate of a function found in tables.py
-'''
-def replace_greek(word):
-	alt_letters = {
-	'Ἀ':'Α',
-	'ά':'α', 'ἀ':'α', 'ἄ':'α', 'ἅ':'α', 'ἆ':'α', 'ᾰ':'α', 'ᾱ':'α', 'ᾴ':'α',
-	'έ':'ε', 'ἐ':'ε', 'ἑ':'ε', 'ἔ':'ε', 'ἕ':'ε', 
-	'ή':'η','ἡ':'η', 'ἤ':'η', 'ἥ':'η', 'ῆ':'η',
-	'ί':'ι','ἰ':'ι', 'ἱ':'ι', 'ἴ':'ι', 'ἵ':'ι', 'ἶ':'ι', 'ῐ':'ι', 'ῑ':'ι', 'ῖ':'ι',
-	'ό':'ο','ὀ':'ο', 'ὁ':'ο', 'ὄ':'ο', 'ὅ':'ο',
-	'ῥ':'ρ',
-	'ύ':'υ','ὐ':'υ', 'ὑ':'υ', 'ὔ':'υ', 'ὕ':'υ', 'ὖ':'υ', 'ὗ':'υ','ῠ':'υ', 'ῡ':'υ', 'ῦ':'υ', 
-	'ώ':'ω', 'ὧ':'ω','ῶ':'ω', 'ῷ':'ω'
-	}
-	for x in word:
-		if x in alt_letters:
-			word = word.replace(x,alt_letters[x])
-	return word
-'''
 
-def sort_dump():
+def convert_files():
+	'''	Converts kaikki.org json files to smaller files containing
+		just the necessary information for students looking for quick 
+		reference. 
+	'''
 
+	# This module can be run independently for debugging purposes
 	print_mode = Test
 	save_mode = not Test
 	test_language = 'Ancient Greek'
@@ -314,11 +352,12 @@ def sort_dump():
 
 	# Load list of tags that are not descriptive/overly general
 	try:
-		change_path('texts')
+		change_path(SUPPLEMENTARY_LANGUAGE_FILES)
 		with open('ignore_tags.txt','r') as f:
 			tag_list = json.load(f)
+
 	except FileNotFoundError:
-		print("'ignore_tags.txt' not found in 'texts' directory.")
+		print(f"'ignore_tags.txt' not found in '{SUPPLEMENTARY_LANGUAGE_FILES}' directory.")
 		input("Enter to continue")
 		tag_list = []
 
@@ -333,23 +372,25 @@ def sort_dump():
 	else:
 		simple = None
 
+	# create file string and initialize new dictionary
 	sorted_file = language.replace(" ", '') + "Dump.txt"
 	new_dictionary = {'definitions':[], 'file': sorted_file, 'language':language}
 
 	print(f"Parsing {file}")
 	
 	# attempt to parse kaikki.org json file
-	change_path('dumps_unsorted')
+	change_path(KAIKKI_JSON_FILES)
 	try:
 		with open(file, 'r') as input_file:
 			new_dictionary['definitions'] = parse_lines(input_file, tag_list,language,simple)
 
 		# save a list of all tags that were encountered
-		change_path('texts')
+		change_path(SUPPLEMENTARY_LANGUAGE_FILES)
 		with open(language + '_new_tag_list.txt', mode='w') as f:
 			json.dump(tag_list, f)
+
 	except FileNotFoundError:
-		print(f"'{file}' not found in 'dumps_unsorted' directory")
+		print(f"'{file}' not found in '{KAIKKI_JSON_FILES}' directory")
 		input("Enter to continue")
 		return
 
@@ -388,8 +429,6 @@ def sort_dump():
 		from dictionary_MLJohnson import Johnson_OED
 		ui_template(new_dictionary,dict_str,shrt_str,cite,cite_2,Johnson_OED)	
 
-	# Last few sections may leave CWD == 'texts', change to 'dumps_sorted'
-	change_path('dumps_sorted')
 
 	# sort by handle string
 	new_dictionary['definitions'].sort(key=lambda item: item.get('handle').lower())

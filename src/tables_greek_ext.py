@@ -2,7 +2,7 @@
 from bs4 import BeautifulSoup
 import tables
 import flashcard_html_utilities
-from load_dict import change_path
+from load_dict import change_path, FORMATTED_FLASHCARD_FILES, FLASHCARD_TEMPLATE_FILES
 from get_selection import get_selection
 from copy import deepcopy, copy
 import random
@@ -915,7 +915,7 @@ def add_tables():
 						return
 
 def auto_add(tables_list,table_info,table_file):
-	change_path('templates')
+	change_path(FLASHCARD_TEMPLATE_FILES)
 	myFiles = glob.glob('*.txt')
 	template_file = "AncientGreek_templates.txt"
 	if template_file not in myFiles:
@@ -1253,7 +1253,7 @@ def features_join(features):
 def print_forms():
 	out_file = 'AncientGreek-FormCards.txt'
 	original_stdout = sys.stdout 
-	change_path('flashcards')
+	change_path(FORMATTED_FLASHCARD_FILES)
 	sys.stdout = open(out_file,'w')
 	forms_list = tables.get_forms("Ancient Greek")
 	random_list = list(range(len(forms_list)))
@@ -1277,7 +1277,7 @@ def print_tables(tables_list):
 	print_forms()
 	out_file = 'AncientGreek-TableCards.txt'
 	original_stdout = sys.stdout 
-	change_path('flashcards')
+	change_path(FORMATTED_FLASHCARD_FILES)
 	sys.stdout = open(out_file,'w')
 	random_list = list(range(len(tables_list)))
 	random.shuffle(random_list)

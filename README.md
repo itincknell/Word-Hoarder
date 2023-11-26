@@ -1,9 +1,9 @@
 # Word-Hoarder
-A program for creating a searchable local language dictionary based (mainly) on dumped wiktionary data. Allows users to collect definitions which can be exported as a machine readable flashcard file. Currently supports Latin, Ancient Greek and Old English.
+A program for creating a searchable local language dictionary based (mainly) on extracted wiktionary data. Allows users to collect definitions which can be exported as a machine readable flashcard file. Currently supports Latin, Ancient Greek and Old English.
 
 ## Parsing Data
-### dump_parser.py
-This module processes wiktionary dump files which can be found at kaikki.org
+### convert_file_utilities.py
+This module processes extracted wiktionary data files which can be found at kaikki.org
 
 <ul><li>https://kaikki.org/dictionary/Latin/</li>
 <li>https://kaikki.org/dictionary/Ancient%20Greek/index.html</li>
@@ -11,7 +11,7 @@ This module processes wiktionary dump files which can be found at kaikki.org
 
 See https://github.com/tatuylonen/wiktextract
 
-The module looks for the files in a subfolder of main directory containing the source files: "dumps_unsorted".
+The module looks for the files in a subfolder of main directory containing the source files: "kaikki_json_files".
 
 The module organizes the data into a standard data structure used in this program.
 
@@ -36,7 +36,7 @@ Definitions are made of standard python data structures.
 <p>Senses:
 {
 "gloss": string containing a word sense you would find in a single line of a definition in a typical dictionary,
-"tags": tags related to a specific word sense such as "Pre-classical" or "transitive"
+"tags": [tags related to a specific word sense such as "Pre-classical" or "transitive"]
 }</p>
 
 ### dictionary_LSJ.py and dictionary_Middle_Liddell.py
