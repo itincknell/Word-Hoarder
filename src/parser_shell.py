@@ -115,14 +115,14 @@ def word_options(new_word,current_dict,backup,existing_word,t):
 		
 		if existing_word:
 			# display different message if word already exists in current dictionary
-			options = {'0':f"\n===================================================\n\
-			{heading} already exists in '{current_dict['file']}'\n",
+			options = {'0':f"\n===================================================\n"\
+			+ f"{heading} already exists in '{current_dict['file']}'\n",
 			'1':f"Do you want to save, edit or discard '{heading}'?\n"}
 		else:
 			# standard message for new words
 			options = {
-			'1':f"\n===================================================\n\
-			Do you want to save, edit or discard '{heading}'?\n"}
+			'1':f"\n===================================================\n"\
+			+ f"Do you want to save, edit or discard '{heading}'?\n"}
 			options.update({'2':">>>(1=save, 2=edit, 0=discard)"})
 
 		# option to create a morphology flashcard template file
