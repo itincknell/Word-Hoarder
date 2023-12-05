@@ -269,16 +269,18 @@ def word_search(current_dict,tags):
 			# go to options for selected word
 			current_dict = word_options(result,current_dict,backup,existing_word,t)
 
-def center_text(text, total_width):
+def center_text(text, total_width, alt_char=None):
 	'''	Display text with equal amount of filler character 'theme' on both sides
 	'''
+	c = theme if alt_char is None else alt_char
+
 	padding_each_side = (total_width - len(text.split('\n')[0])) // 2
 	lines = text.split('\n')
-	centered_lines = [f"{theme} " * ((padding_each_side - 2)//2) \
-		+ line + f" {theme}" * ( (padding_each_side + 2)//2)\
-		+ f" {theme}" for line in lines if line != '']
+	centered_lines = [f"{c} " * ((padding_each_side - 2)//2) \
+		+ line + f" {c}" * ( (padding_each_side + 2)//2)\
+		+ f" {c}" for line in lines if line != '']
 
-	return '\n'.join(centered_lines)
+	return '\n'.join([line[:total_width] for line in centered_lines])
 
 def choose_from_trie(t,lang,debug_print=True):
 	''' Displays search window. Retreives words matching user search string
@@ -293,47 +295,60 @@ def choose_from_trie(t,lang,debug_print=True):
 	# flag when search turns up no results
 	empty = False
 
+	# stores selected word for returning to calling function
+	result = None
+
 	while True:
 		clear_screen()
+		window_size = os.get_terminal_size().columns
 
 		# print heading
-		message = f"{theme} " * (75) + "\n"
+		message = center_text(f"{theme}",window_size)
 		asci_art = lang.upper() + " WORD SEARCH"
-		asci_art = figlet_format(asci_art,font='digital',width=150)
-		asci_art = center_text(asci_art,150)
-		message += asci_art + "\n"
-		message += f"{theme} " * (75) 
-		message += "\n" + " "*148 + theme
-		message += "\n" + " "*148 + theme
+		asci_art = figlet_format(asci_art,font='digital',width=window_size)
+		asci_art = center_text(asci_art,window_size)
+		message += "\n" + asci_art + "\n"
+		message += center_text(f"{theme}",window_size)
+		message += "\n\n"
 		print(message)
 
 		# display matching items, if any
 		if items:
 			print_word_list(items)
 
+		# result may contain an error message from an invalid selection
+		if result == "Selection out of range" and items:
+			print(center_text(result,window_size,"*"))
+			result = None
+
 		# display current search string
 		if prefix:
-			print(" " * 148 + theme)
+			print(" " * window_size)
 			message = f"Current filter: {prefix}-"
-			print("{:<148}".format(message) + theme)
+			print(f"{message:<{window_size}}")
 
 		# notify user the search string did not have any matches
 		if empty:
-			print(" " * 148 + theme)
-			print("{:<148}".format("! No items found with this combination") + theme)
-			print(" " * 148 + theme)
+			print(" " * window_size)
+			message = "! No items found with this combination"
+			print(f"{message:<{window_size}}")
+			print(" " * window_size)
 			empty = False
 
 		# Display options menu
-		print("{:<148}".format("Options:") + theme)
+		message = "Options:"
+		print(f"{message:<{window_size}}")
+
 
 		# If options are visible, prompt user to choose a definition
 		if prefix:
-			print("{:<148}".format("Enter a number to select definition") + theme)
+			message = "Enter a number to select definition"
+			print(f"{message:<{window_size}}")
 
 		# prompt user to enter a search string, 
 		# instructions for how to limit the length of matching
-		print("{:<148}".format("Enter a search word or partial word (add one or more trailing '*'s to limit characters)") + theme)
+		message = "Enter a search word or partial word (add one or more trailing '*'s to limit characters)"
+		print(f"{message:<{window_size}}")
 
 		# options to clear search string or quit
 		message = "Enter '0' to go back, '00' to "
@@ -342,7 +357,7 @@ def choose_from_trie(t,lang,debug_print=True):
 		message += "end"
 
 		# display message and wait for user input
-		print("{:<148}".format(message) + theme)
+		print(f"{message:<{window_size}}")
 		user_input = input(": ")
 
 		# validate user has input some value
@@ -373,10 +388,10 @@ def choose_from_trie(t,lang,debug_print=True):
 			result = get_word(items,int(user_input))
 
 			# a valid selection was made
-			if result:
-				return result
-			else:
+			if result == "Selection out of range":
 				continue
+			else:
+				return result
 
 		# if none of the above apply, add user input to search string
 		else:
@@ -443,8 +458,8 @@ def get_word(items,user_input):
 	if i in range(len(items)):
 		return items[i]
 	else:
-		print("\n\t" + theme*3 + " Selection out of range " + theme*3 + "\n")
-		return None
+		#return "\n\t" + "*" * (window_size) + " Selection out of range " + "*" * 3 + "\n"
+		return "Selection out of range"
 
 def visible_len(s):
     return len([c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn'])
@@ -453,23 +468,21 @@ def print_word_list(items):
 	'''	Print search results in number list with consisted padding
 	'''
 	clear_screen()
+	window_size = os.get_terminal_size().columns
 
 	# print heading
-	print(f"{theme} " * 75)
-	print(f"{theme} " * 33 + "SEARCH RESULTS " + f" {theme}" * 34)
-	print(" " * 148 + theme)
-	print(" " * 148 + theme)
+	print(center_text(f"{theme}",window_size))
+	print(center_text("SEARCH RESULTS ",window_size))
+	print("\n")
 	labels = ["      Headings:","Definitions:"]
 	message = f"{labels[0]:<30}{labels[1]}"
-	print("{:<148}".format(message) + theme)
-	print(" " * 148 + theme)
+	print(f"{message:<{window_size}}\n")
 
 	# Loop to create sub-list to select from
 	for i in range(len(items)):
 
 		if i >= 100:
-			message = f"{theme} " * 29 + "Limit reached " + f"{theme} " * 29
-			print("{:<148}".format(message) + theme)
+			print(center_text("Limit reached",window_size))
 			break
 
 		# assign word to shorten name
@@ -520,7 +533,7 @@ def print_word_list(items):
 				message += " "
 
 			# print and reset message
-			print(message + theme)
+			print(message)
 			message = ''
 
 		

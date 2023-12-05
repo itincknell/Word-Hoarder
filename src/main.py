@@ -11,23 +11,24 @@ from pyfiglet import figlet_format
 # Print welcome message
 # # # # # # # # # # # # 
 clear_screen()
+window_size = os.get_terminal_size().columns
 message = ''
 for i in range(5):
 	if i%2 == 0:
-		message += "\n" + "Ξ " * (75)
+		message += "\n" + "Ξ " * (window_size//2)
 	else:
-		message += "\n" + "Σ " * (75)
+		message += "\n" + "Σ " * (window_size//2)
 
 middle = '\n\n'
-middle += figlet_format("        Word-Hoarder +",font='epic',width=150)
+middle += figlet_format("        Word-Hoarder +",font='epic',width=window_size)
 message += middle
 for i in range(5):
 	if i%2 == 0:
-		message += "\n" + "Ξ " * (75)
+		message += "\n" + "Ξ " * (window_size//2)
 	else:
-		message += "\n" + "Σ " * (75)
+		message += "\n" + "Σ " * (window_size//2)
 print(message)
-input("\n\n\n\t\t\tMake sure the display fits your screen\n\t\t\tPress \'Enter\' to continue\n")
+input("\n\n\n\t\t\tWelcome to Word-Hoarder\n\t\t\tPress \'Enter\' to continue\n")
 
 # Whole program contained in loop
 # # # # # # # # # # # # # # # # # 
