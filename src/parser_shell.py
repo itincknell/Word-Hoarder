@@ -529,8 +529,8 @@ def print_word_list(items):
 			message += f"{entry_string}"
 
 			# ensure correct padding for all alphabets
-			while visible_len(message) < 148:
-				message += " "
+			while visible_len(message) > window_size:
+				message = message[:-1]
 
 			# print and reset message
 			print(message)
